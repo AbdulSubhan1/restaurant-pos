@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Restaurant POS System
 
-## Getting Started
+A modern restaurant Point of Sale (POS) system built with Next.js and shadcn UI components. This system helps restaurants manage orders, tables, menu items, and staff.
 
-First, run the development server:
+## Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **Frontend/Backend**: Next.js (App Router)
+- **UI Components**: shadcn UI with Tailwind CSS
+- **Database**: PostgreSQL
+- **ORM/Schema Management**: Drizzle ORM
+- **Authentication**: Custom JWT-based authentication
+- **Real-time Updates**: Socket.io
+- **State Management**: Zustand
+- **Form Handling**: React Hook Form with Zod validation
+- **API Structure**: tRPC for type-safe APIs
+- **Notifications**: Sonner for in-app notifications
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Features
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Role-based authentication (Admin, Manager, Server, Kitchen Staff)
+- Menu management (items, categories)
+- Table management with visual layout
+- Order creation and management
+- Real-time kitchen display system
+- Basic reporting and analytics
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Development Setup
 
-## Learn More
+1. Clone the repository
+2. Install dependencies:
+   ```
+   npm install
+   ```
+3. Set up environment variables:
 
-To learn more about Next.js, take a look at the following resources:
+   - Copy `.env.example` to `.env`
+   - Update `DATABASE_URL` with your PostgreSQL connection string
+   - Set a secure `JWT_SECRET`
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. Generate database migrations:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+   ```
+   npm run migrate:generate
+   ```
 
-## Deploy on Vercel
+5. Run migrations:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   ```
+   npm run migrate
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+6. Start the development server:
+   ```
+   npm run dev
+   ```
+
+## Project Structure
+
+- `/src/app` - Next.js application routes
+- `/src/components` - Reusable UI components
+- `/src/db` - Database schema and operations
+- `/src/features` - Feature-specific components and logic
+- `/src/lib` - Utility functions
+- `/src/hooks` - Custom React hooks
+- `/src/store` - Zustand state management
+- `/src/server` - tRPC API definitions
+
+## License
+
+This project is licensed under the MIT License.
