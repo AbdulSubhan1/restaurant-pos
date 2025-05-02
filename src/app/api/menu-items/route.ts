@@ -32,8 +32,9 @@ export async function GET(request: NextRequest) {
         name: menuItems.name,
         description: menuItems.description,
         price: menuItems.price,
-        image: menuItems.imageUrl,
-        isAvailable: menuItems.available,
+        imageUrl: menuItems.imageUrl,
+        available: menuItems.available,
+        preparationTime: menuItems.preparationTime,
         categoryId: menuItems.categoryId,
         createdAt: menuItems.createdAt,
         updatedAt: menuItems.updatedAt,
@@ -84,7 +85,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, price, image, isAvailable, categoryId } = body;
+    const {
+      name,
+      description,
+      price,
+      imageUrl,
+      available,
+      categoryId,
+      preparationTime,
+    } = body;
 
     // Validate required fields
     if (!name) {
@@ -128,18 +137,36 @@ export async function POST(request: NextRequest) {
         name,
         description: description || null,
         price: price.toString(),
-        imageUrl: image || null,
-        available: isAvailable !== undefined ? isAvailable : true,
+        imageUrl: imageUrl || null,
+        available: available !== undefined ? available : true,
+        preparationTime: preparationTime || null,
         categoryId: categoryId || null,
       })
       .returning();
 
     const newMenuItem = result[0];
 
+    // Fetch the category name if applicable
+    let categoryName = null;
+    if (newMenuItem.categoryId) {
+      const categoryResult = await db
+        .select({ name: categories.name })
+        .from(categories)
+        .where(eq(categories.id, newMenuItem.categoryId))
+        .limit(1);
+
+      if (categoryResult.length > 0) {
+        categoryName = categoryResult[0].name;
+      }
+    }
+
     return NextResponse.json(
       {
         success: true,
-        menuItem: newMenuItem,
+        menuItem: {
+          ...newMenuItem,
+          categoryName,
+        },
       },
       { status: 201 }
     );

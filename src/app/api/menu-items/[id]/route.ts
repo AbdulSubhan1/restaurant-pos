@@ -46,7 +46,7 @@ export async function GET(
         description: menuItems.description,
         price: menuItems.price,
         image: menuItems.imageUrl,
-        isAvailable: menuItems.available,
+        available: menuItems.available,
         categoryId: menuItems.categoryId,
         createdAt: menuItems.createdAt,
         updatedAt: menuItems.updatedAt,
@@ -133,7 +133,15 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description, price, image, isAvailable, categoryId } = body;
+    const {
+      name,
+      description,
+      price,
+      imageUrl,
+      available,
+      categoryId,
+      preparationTime,
+    } = body;
 
     // Validate required fields
     if (!name) {
@@ -177,8 +185,9 @@ export async function PUT(
         name,
         description: description || null,
         price: price.toString(),
-        imageUrl: image || null,
-        available: isAvailable !== undefined ? isAvailable : true,
+        imageUrl: imageUrl || null,
+        available: available !== undefined ? available : true,
+        preparationTime: preparationTime || null,
         categoryId: categoryId || null,
         updatedAt: new Date(),
       })

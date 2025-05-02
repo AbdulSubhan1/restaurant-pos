@@ -65,6 +65,7 @@ export default function CategoriesTab() {
   const handleAddCategory = async (categoryData: {
     name: string;
     description?: string;
+    imageUrl?: string;
   }) => {
     try {
       const response = await fetch("/api/categories", {
@@ -97,7 +98,11 @@ export default function CategoriesTab() {
   // Function to update a category
   const handleUpdateCategory = async (
     id: number,
-    categoryData: { name: string; description?: string }
+    categoryData: {
+      name: string;
+      description?: string;
+      imageUrl?: string;
+    }
   ) => {
     try {
       const response = await fetch(`/api/categories/${id}`, {

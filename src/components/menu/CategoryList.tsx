@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatDate } from "@/lib/utils";
+import Image from "next/image";
 
 type Category = {
   id: number;
@@ -44,6 +45,7 @@ export default function CategoryList({
     <Table>
       <TableHeader>
         <TableRow>
+          <TableHead className="w-16">Image</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Description</TableHead>
           <TableHead>Created</TableHead>
@@ -53,6 +55,22 @@ export default function CategoryList({
       <TableBody>
         {categories.map((category) => (
           <TableRow key={category.id}>
+            <TableCell>
+              {category.imageUrl ? (
+                <div className="relative w-12 h-12 rounded-md overflow-hidden">
+                  <Image
+                    src={category.imageUrl}
+                    alt={category.name}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                  No img
+                </div>
+              )}
+            </TableCell>
             <TableCell className="font-medium">{category.name}</TableCell>
             <TableCell>{category.description || "-"}</TableCell>
             <TableCell>{formatDate(category.createdAt)}</TableCell>

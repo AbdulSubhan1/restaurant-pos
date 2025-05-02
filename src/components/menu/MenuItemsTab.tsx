@@ -15,7 +15,7 @@ type MenuItem = {
   description: string | null;
   price: number;
   image: string | null;
-  isAvailable: boolean; // This comes from the 'active' field in the database but is transformed in the API
+  available: boolean; // This is the field name used in the database schema
   categoryId: number | null;
   createdAt: string;
   updatedAt: string;
@@ -109,7 +109,7 @@ export default function MenuItemsTab() {
     description?: string;
     price: number;
     categoryId?: number;
-    isAvailable?: boolean;
+    available?: boolean;
     image?: string;
   }) => {
     try {
@@ -156,7 +156,7 @@ export default function MenuItemsTab() {
       description?: string;
       price: number;
       categoryId?: number;
-      isAvailable?: boolean;
+      available?: boolean;
       image?: string;
     }
   ) => {
@@ -260,23 +260,29 @@ export default function MenuItemsTab() {
               {isAddingItem && (
                 <MenuItemForm
                   categories={categories}
-                  onSubmit={handleAddMenuItem}
+                  onSubmit={(data) =>
+                    handleAddMenuItem({
+                      ...data,
+                      image: data.imageUrl,
+                    })
+                  }
                   onCancel={() => setIsAddingItem(false)}
                 />
               )}
 
               {editingItem && (
                 <MenuItemForm
-                  menuItem={editingItem}
+                  menuItem={{
+                    ...editingItem,
+                    imageUrl: editingItem.image,
+                  }}
                   categories={categories}
-                  onSubmit={(data: {
-                    name: string;
-                    description?: string;
-                    price: number;
-                    categoryId?: number;
-                    isAvailable: boolean;
-                    image?: string;
-                  }) => handleUpdateMenuItem(editingItem.id, data)}
+                  onSubmit={(data) =>
+                    handleUpdateMenuItem(editingItem.id, {
+                      ...data,
+                      image: data.imageUrl,
+                    })
+                  }
                   onCancel={() => setEditingItem(null)}
                 />
               )}

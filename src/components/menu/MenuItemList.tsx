@@ -19,7 +19,7 @@ type MenuItem = {
   description: string | null;
   price: number;
   image: string | null;
-  isAvailable: boolean;
+  available: boolean;
   categoryId: number | null;
   createdAt: string;
   updatedAt: string;
@@ -80,12 +80,12 @@ export default function MenuItemList({
             <TableCell>
               <span
                 className={`px-2 py-1 rounded-full text-xs font-medium ${
-                  item.isAvailable
+                  item.available
                     ? "bg-green-100 text-green-800"
                     : "bg-red-100 text-red-800"
                 }`}
               >
-                {item.isAvailable ? "Available" : "Unavailable"}
+                {item.available ? "Available" : "Unavailable"}
               </span>
             </TableCell>
             <TableCell>

@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import ImageUploader from "./ImageUploader";
 
 // Define the schema for category validation
 const categorySchema = z.object({
@@ -29,17 +31,27 @@ interface CategoryFormProps {
     id: number;
     name: string;
     description: string | null;
+    imageUrl?: string | null;
   };
-  onSubmit: (data: CategoryFormValues) => void;
+  onSubmit: (data: {
+    name: string;
+    description?: string;
+    imageUrl?: string;
+  }) => void;
   onCancel: () => void;
+  isDialog?: boolean;
 }
 
 export default function CategoryForm({
   category,
   onSubmit,
   onCancel,
+  isDialog = false,
 }: CategoryFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageData, setImageData] = useState<string | null>(
+    category?.imageUrl || null
+  );
 
   // Initialize the form with default values or existing category values
   const {
@@ -58,49 +70,61 @@ export default function CategoryForm({
   const processSubmit = async (data: CategoryFormValues) => {
     setIsSubmitting(true);
     try {
-      await onSubmit(data);
+      await onSubmit({
+        ...data,
+        imageUrl: imageData || undefined,
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  return (
-    <div className="bg-muted/50 p-4 rounded-md mb-6">
-      <h3 className="text-lg font-medium mb-4">
-        {category ? "Edit Category" : "Add New Category"}
-      </h3>
+  const formContent = (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">
+              Name <span className="text-red-500">*</span>
+            </Label>
+            <Input
+              id="name"
+              placeholder="Category name"
+              {...register("name")}
+              className={errors.name ? "border-red-500" : ""}
+            />
+            {errors.name && (
+              <p className="text-sm text-red-500">{errors.name.message}</p>
+            )}
+          </div>
 
-      <form onSubmit={handleSubmit(processSubmit)} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">
-            Name <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            id="name"
-            placeholder="Category name"
-            {...register("name")}
-            className={errors.name ? "border-red-500" : ""}
-          />
-          {errors.name && (
-            <p className="text-sm text-red-500">{errors.name.message}</p>
-          )}
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea
+              id="description"
+              placeholder="Category description (optional)"
+              {...register("description")}
+              className={errors.description ? "border-red-500" : ""}
+              rows={3}
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
-            id="description"
-            placeholder="Category description (optional)"
-            {...register("description")}
-            className={errors.description ? "border-red-500" : ""}
-            rows={3}
+        <div>
+          <ImageUploader
+            initialImage={category?.imageUrl || null}
+            onImageChange={setImageData}
           />
-          {errors.description && (
-            <p className="text-sm text-red-500">{errors.description.message}</p>
-          )}
         </div>
+      </div>
 
-        <div className="flex justify-end gap-2 pt-2">
+      <div className="flex justify-end gap-2 pt-4 mt-4 border-t">
+        {!isDialog && (
           <Button
             type="button"
             variant="outline"
@@ -109,11 +133,31 @@ export default function CategoryForm({
           >
             Cancel
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Saving..." : category ? "Update" : "Create"}
-          </Button>
-        </div>
-      </form>
-    </div>
+        )}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting
+            ? "Saving..."
+            : category
+            ? "Update Category"
+            : "Create Category"}
+        </Button>
+      </div>
+    </>
+  );
+
+  if (isDialog) {
+    return <form onSubmit={handleSubmit(processSubmit)}>{formContent}</form>;
+  }
+
+  return (
+    <Card className="mb-6">
+      <CardContent className="p-6">
+        <h3 className="text-lg font-medium mb-4">
+          {category ? "Edit Category" : "Add New Category"}
+        </h3>
+
+        <form onSubmit={handleSubmit(processSubmit)}>{formContent}</form>
+      </CardContent>
+    </Card>
   );
 }

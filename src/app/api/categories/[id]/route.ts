@@ -119,7 +119,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, description } = body;
+    const { name, description, imageUrl } = body;
 
     if (!name) {
       return NextResponse.json(
@@ -134,6 +134,7 @@ export async function PUT(
       .set({
         name,
         description: description || null,
+        imageUrl: imageUrl || null,
         updatedAt: new Date(),
       })
       .where(eq(categories.id, id))
