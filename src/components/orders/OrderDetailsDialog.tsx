@@ -9,16 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import {
-  Check,
-  Clock,
-  CreditCard,
-  AlertCircle,
-  X,
-  Trash2,
-  Edit,
-  Plus,
-} from "lucide-react";
+import { Check, Clock, CreditCard, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import PaymentDialog from "@/components/payments/PaymentDialog";
@@ -57,13 +48,21 @@ interface OrderDetailsDialogProps {
   readOnly?: boolean;
 }
 
+// Define Receipt type
+interface Receipt {
+  orderId: number;
+  amount: string;
+  paymentMethod: string;
+  reference: string;
+  [key: string]: unknown;
+}
+
 export default function OrderDetailsDialog({
   order,
   onClose,
   onStatusChange,
   readOnly = false,
 }: OrderDetailsDialogProps) {
-  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
 
   // Calculate total
@@ -83,7 +82,7 @@ export default function OrderDetailsDialog({
   };
 
   // Handle payment completion
-  const handlePaymentComplete = (receipt: any) => {
+  const handlePaymentComplete = () => {
     toast.success("Payment processed successfully");
     if (onStatusChange) {
       onStatusChange(order.id, "paid");
@@ -252,7 +251,6 @@ export default function OrderDetailsDialog({
               {(order.status === "completed" || order.status === "ready") && (
                 <Button
                   onClick={handleProcessPayment}
-                  disabled={isProcessingPayment}
                   className="w-full bg-blue-500 hover:bg-blue-600"
                 >
                   <CreditCard className="mr-2 h-4 w-4" /> Process Payment

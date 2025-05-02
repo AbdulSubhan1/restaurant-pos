@@ -1,17 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useCallback } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Search,
-  Calendar,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-  Receipt,
-  Eye,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -52,6 +44,14 @@ type Payment = {
   };
 };
 
+// First, add the SplitPayment type definition before the Receipt type
+type SplitPayment = {
+  id: string;
+  paymentMethod: string;
+  amount: string;
+  tipAmount: string;
+};
+
 type Receipt = {
   receiptNumber: string;
   orderId: number;
@@ -65,7 +65,7 @@ type Receipt = {
   paymentStatus: string;
   server: string;
   splitPayment?: boolean;
-  payments?: any[];
+  payments?: SplitPayment[];
   paymentMethods?: string[];
 };
 
@@ -73,7 +73,6 @@ export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<Receipt | null>(null);
 
@@ -87,13 +86,8 @@ export default function PaymentsPage() {
   const [dateRange, setDateRange] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // Fetch payments on component mount and when filters change
-  useEffect(() => {
-    fetchPayments();
-  }, [page, paymentMethod, dateRange]);
-
   // Function to fetch payments
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -139,7 +133,12 @@ export default function PaymentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, paymentMethod, dateRange, searchTerm, payments.length]);
+
+  // Fetch payments on component mount and when filters change
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
 
   // Handle search
   const handleSearch = () => {
@@ -150,8 +149,6 @@ export default function PaymentsPage() {
   // View receipt for a payment
   const viewReceipt = async (payment: Payment) => {
     try {
-      setSelectedPayment(payment);
-
       // Create a receipt object from the payment data
       const receipt: Receipt = {
         receiptNumber: payment.reference,
@@ -165,6 +162,9 @@ export default function PaymentsPage() {
         paidAt: payment.createdAt,
         paymentStatus: payment.status,
         server: payment.metadata?.serverName || "Staff",
+        splitPayment: false,
+        payments: [], // Initialize as empty SplitPayment array
+        paymentMethods: [payment.paymentMethod],
       };
 
       setReceiptData(receipt);

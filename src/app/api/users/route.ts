@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { users } from "@/db/schema/users";
 import { verifyToken } from "@/lib/auth-utils";
-import { eq, like, desc, asc, sql, and, or } from "drizzle-orm";
+import { eq, desc, sql, or } from "drizzle-orm";
 
 // GET handler for listing users with filtering and pagination
 export async function GET(request: NextRequest) {

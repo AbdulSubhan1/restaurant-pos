@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Receipt, Printer, Download } from "lucide-react";
+import { Printer, Download } from "lucide-react";
 
 // Define the types
 type OrderItem = {
@@ -46,6 +46,13 @@ type PaymentMethod = {
   tipAmount: string;
 };
 
+type SplitPayment = {
+  id: string;
+  paymentMethod: string;
+  amount: string;
+  tipAmount: string;
+};
+
 type Receipt = {
   receiptNumber: string;
   orderId: number;
@@ -72,7 +79,7 @@ interface ReceiptViewProps {
     paymentStatus: string;
     server: string;
     splitPayment?: boolean;
-    payments?: any[];
+    payments?: SplitPayment[];
     paymentMethods?: string[];
   };
   order?: Order;

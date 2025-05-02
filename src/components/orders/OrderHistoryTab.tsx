@@ -1,15 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Search,
-  Calendar,
-  Filter,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -66,13 +60,8 @@ export default function OrderHistoryTab() {
   const [dateRange, setDateRange] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
-  // Fetch orders on component mount and when filters change
-  useEffect(() => {
-    fetchOrders();
-  }, [page, status, dateRange]);
-
   // Function to fetch orders
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -121,7 +110,12 @@ export default function OrderHistoryTab() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, pageSize, status, dateRange, searchTerm, orders.length]);
+
+  // Fetch orders on component mount and when filters change
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   // Handle search
   const handleSearch = () => {

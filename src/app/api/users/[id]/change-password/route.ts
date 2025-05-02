@@ -5,13 +5,34 @@ import { verifyToken } from "@/lib/auth-utils";
 import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
+// POST /api/users/[id]/change-password - Change password for a user
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Convert string ID to number
-    const userId = parseInt(params.id, 10);
+    // Get authentication token
+    const token = request.cookies.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json(
+        { success: false, message: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    // Verify token
+    const payload = verifyToken(token);
+    if (!payload) {
+      return NextResponse.json(
+        { success: false, message: "Invalid token" },
+        { status: 401 }
+      );
+    }
+
+    const { id: userIdString } = await params;
+    const userId = parseInt(userIdString);
+
     if (isNaN(userId)) {
       return NextResponse.json(
         { success: false, message: "Invalid user ID" },
@@ -39,26 +60,6 @@ export async function POST(
           message: "New password must be at least 6 characters",
         },
         { status: 400 }
-      );
-    }
-
-    // Get the auth token from cookies
-    const token = request.cookies.get("auth_token")?.value;
-
-    if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Authentication required" },
-        { status: 401 }
-      );
-    }
-
-    // Verify the token
-    const payload = verifyToken(token);
-
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
       );
     }
 

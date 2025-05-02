@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +8,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -21,7 +19,6 @@ import { Loader2 } from "lucide-react";
 
 export default function ProfilePage() {
   const { user, updateUserData } = useAuthStore();
-  const router = useRouter();
 
   const [profileForm, setProfileForm] = useState({
     name: "",

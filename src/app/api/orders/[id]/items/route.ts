@@ -9,7 +9,7 @@ import { verifyToken } from "@/lib/auth-utils";
 // POST /api/orders/[id]/items - Add items to an existing order
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -25,8 +25,8 @@ export async function POST(
       return NextResponse.json({ message: "Invalid token" }, { status: 401 });
     }
 
-    const paramsData = await params;
-    const orderId = parseInt(paramsData.id);
+    const { id: orderIdString } = await params;
+    const orderId = parseInt(orderIdString);
 
     if (isNaN(orderId)) {
       return NextResponse.json(

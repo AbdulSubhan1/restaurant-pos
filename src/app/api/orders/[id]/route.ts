@@ -11,7 +11,7 @@ import { verifyToken } from "@/lib/auth-utils";
 // GET /api/orders/[id] - Get a specific order by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -31,7 +31,8 @@ export async function GET(
       );
     }
 
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     if (isNaN(id)) {
       return NextResponse.json(
@@ -103,7 +104,7 @@ export async function GET(
 // PUT /api/orders/[id] - Update order status, notes, or table
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -119,8 +120,8 @@ export async function PUT(
       return NextResponse.json({ message: "Invalid token" }, { status: 401 });
     }
 
-    const paramsData = await params;
-    const id = parseInt(paramsData.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     if (isNaN(id)) {
       return NextResponse.json(
@@ -208,7 +209,7 @@ export async function PUT(
 // DELETE /api/orders/[id] - Cancel an order
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -231,7 +232,9 @@ export async function DELETE(
     // Only admin, manager, or original server can cancel orders
     if (payload.role !== "admin" && payload.role !== "manager") {
       // Check if user is the server who created the order
-      const orderId = parseInt(params.id);
+      const { id: orderIdString } = await params;
+      const orderId = parseInt(orderIdString);
+
       if (isNaN(orderId)) {
         return NextResponse.json(
           { success: false, message: "Invalid order ID" },
@@ -260,7 +263,8 @@ export async function DELETE(
       }
     }
 
-    const id = parseInt(params.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     if (isNaN(id)) {
       return NextResponse.json(

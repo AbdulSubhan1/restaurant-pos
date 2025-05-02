@@ -1,5 +1,4 @@
 import { Metadata } from "next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import MenuTabs from "@/components/menu/MenuTabs";
 
 export const metadata: Metadata = {

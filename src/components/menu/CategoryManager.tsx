@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, GripVertical, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -10,7 +9,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import CategoryForm from "./CategoryForm";
@@ -34,7 +32,6 @@ export default function CategoryManager() {
   const [isDragging, setIsDragging] = useState(false);
   const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
   const [hoveredItemIndex, setHoveredItemIndex] = useState<number | null>(null);
-  const [isEditing, setIsEditing] = useState<number | null>(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
 
   useEffect(() => {
@@ -150,7 +147,6 @@ export default function CategoryManager() {
       setCategories((prev) =>
         prev.map((cat) => (cat.id === id ? updatedCategory : cat))
       );
-      setIsEditing(null);
       toast.success("Category updated successfully");
     } catch (err) {
       toast.error(

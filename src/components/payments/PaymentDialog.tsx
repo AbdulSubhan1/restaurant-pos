@@ -26,7 +26,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PAYMENT_METHODS } from "@/db/schema/payments";
 import {
   CreditCard,
-  Receipt,
   DollarSign,
   Smartphone,
   GiftIcon,
@@ -69,10 +68,28 @@ type SplitPayment = {
   tipAmount: string;
 };
 
+// Define Receipt type
+type Receipt = {
+  receiptNumber: string;
+  orderId: number;
+  orderAmount: string;
+  tipAmount: string;
+  totalAmount: string;
+  amountPaid: string;
+  change?: string;
+  paymentMethod: string;
+  paidAt: string;
+  paymentStatus: string;
+  server: string;
+  splitPayment?: boolean;
+  payments?: SplitPayment[];
+  paymentMethods?: string[];
+};
+
 interface PaymentDialogProps {
   order: Order;
   onClose: () => void;
-  onPaymentComplete: (receipt: any) => void;
+  onPaymentComplete: (receipt: Receipt) => void;
 }
 
 export default function PaymentDialog({
@@ -88,7 +105,7 @@ export default function PaymentDialog({
   const [amountTendered, setAmountTendered] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
-  const [receiptData, setReceiptData] = useState<any>(null);
+  const [receiptData, setReceiptData] = useState<Receipt | null>(null);
 
   // Split payment state
   const [useSplitPayment, setUseSplitPayment] = useState<boolean>(false);
@@ -121,24 +138,6 @@ export default function PaymentDialog({
   const applyTipPercentage = (percentage: number) => {
     const tipValue = (orderTotal * percentage) / 100;
     setTipAmount(tipValue.toFixed(2));
-  };
-
-  // Reset the payment form
-  const resetForm = () => {
-    setPaymentMethod(PAYMENT_METHODS.CASH);
-    setTipAmount("0");
-    setAmountTendered("");
-    setNotes("");
-    setReceiptData(null);
-    setUseSplitPayment(false);
-    setSplitPayments([
-      {
-        id: "split-1",
-        paymentMethod: PAYMENT_METHODS.CASH,
-        amount: "",
-        tipAmount: "0",
-      },
-    ]);
   };
 
   // Handle full payment
@@ -311,23 +310,6 @@ export default function PaymentDialog({
 
   const splitFinalTotal = orderTotal + splitTipTotal;
   const splitRemaining = Math.max(0, splitFinalTotal - splitPaymentTotal);
-
-  // Get payment method icon
-  const getPaymentIcon = (method: string) => {
-    switch (method) {
-      case PAYMENT_METHODS.CASH:
-        return <DollarSign className="h-4 w-4" />;
-      case PAYMENT_METHODS.CREDIT_CARD:
-      case PAYMENT_METHODS.DEBIT_CARD:
-        return <CreditCard className="h-4 w-4" />;
-      case PAYMENT_METHODS.MOBILE_PAYMENT:
-        return <Smartphone className="h-4 w-4" />;
-      case PAYMENT_METHODS.GIFT_CARD:
-        return <GiftIcon className="h-4 w-4" />;
-      default:
-        return <DollarSign className="h-4 w-4" />;
-    }
-  };
 
   // Add state for showing receipt
   const [showReceipt, setShowReceipt] = useState(false);

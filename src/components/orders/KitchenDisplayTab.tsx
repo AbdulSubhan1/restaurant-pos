@@ -171,7 +171,7 @@ export default function KitchenDisplayTab() {
       const updatedOrder = data.order;
       if (updatedOrder && updatedOrder.items) {
         const allItemsReady = updatedOrder.items.every(
-          (item) => item.status === "ready"
+          (item: OrderItem) => item.status === "ready"
         );
         if (allItemsReady && updatedOrder.status !== "ready") {
           toast.info(

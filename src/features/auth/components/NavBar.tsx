@@ -2,7 +2,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "../store/authStore";
 import { LogoutButton } from "./LogoutButton";
-import { UserCircle, LogOut } from "lucide-react";
+import { UserCircle } from "lucide-react";
 
 export function NavBar() {
   const pathname = usePathname();

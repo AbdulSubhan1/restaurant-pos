@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { menuItems } from "@/db/schema/menu-items";
 import { categories } from "@/db/schema/categories";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { verifyToken } from "@/lib/auth-utils";
 
 // GET /api/menu-items - Get all menu items

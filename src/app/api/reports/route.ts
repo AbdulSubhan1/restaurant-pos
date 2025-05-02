@@ -8,15 +8,8 @@ import {
   payments,
   users,
 } from "@/db/schema";
-import { eq, sql, and, gte, count, sum } from "drizzle-orm";
-import {
-  isToday,
-  isThisWeek,
-  isThisMonth,
-  startOfDay,
-  startOfWeek,
-  startOfMonth,
-} from "date-fns";
+import { eq, sql, gte, count } from "drizzle-orm";
+import { startOfDay, startOfWeek, startOfMonth } from "date-fns";
 
 export async function GET(request: Request) {
   try {
@@ -64,7 +57,7 @@ export async function GET(request: Request) {
       .leftJoin(orders, eq(orderItems.orderId, orders.id))
       .where(gte(orders.createdAt, startDate))
       .groupBy(orderItems.menuItemId, menuItems.name)
-      .orderBy((eb) => sql`count(*) desc`)
+      .orderBy(() => sql`count(*) desc`)
       .limit(10);
 
     // Revenue Analysis by Payment Method
@@ -90,7 +83,7 @@ export async function GET(request: Request) {
       .leftJoin(users, eq(orders.serverId, users.id))
       .where(gte(orders.createdAt, startDate))
       .groupBy(orders.serverId, users.name)
-      .orderBy((eb) => sql`count(*) desc`)
+      .orderBy(() => sql`count(*) desc`)
       .limit(5);
 
     // Table Occupancy

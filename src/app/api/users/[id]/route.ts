@@ -7,19 +7,9 @@ import { and, eq, sql } from "drizzle-orm";
 // GET handler to fetch a single user by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Convert string ID to number
-    const userId = parseInt(params.id, 10);
-    if (isNaN(userId)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid user ID" },
-        { status: 400 }
-      );
-    }
-
-    // Get the auth token from cookies
     const token = request.cookies.get("auth_token")?.value;
 
     if (!token) {
@@ -29,9 +19,7 @@ export async function GET(
       );
     }
 
-    // Verify the token
     const payload = verifyToken(token);
-
     if (!payload) {
       return NextResponse.json(
         { success: false, message: "Invalid token" },
@@ -39,8 +27,18 @@ export async function GET(
       );
     }
 
+    const { id: idString } = await params;
+    const id = parseInt(idString);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid user ID" },
+        { status: 400 }
+      );
+    }
+
     // Users can only see their own details or admins can see any user
-    if (payload.id !== userId && payload.role !== "admin") {
+    if (payload.id !== id && payload.role !== "admin") {
       return NextResponse.json(
         { success: false, message: "Unauthorized access" },
         { status: 403 }
@@ -59,7 +57,7 @@ export async function GET(
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .where(eq(users.id, userId))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (!userResult.length) {
@@ -85,21 +83,9 @@ export async function GET(
 // PUT handler to update a user
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Convert string ID to number
-    const userId = parseInt(params.id, 10);
-    if (isNaN(userId)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid user ID" },
-        { status: 400 }
-      );
-    }
-
-    const { name, email, role, active } = await request.json();
-
-    // Get the auth token from cookies
     const token = request.cookies.get("auth_token")?.value;
 
     if (!token) {
@@ -109,15 +95,25 @@ export async function PUT(
       );
     }
 
-    // Verify the token
     const payload = verifyToken(token);
-
     if (!payload) {
       return NextResponse.json(
         { success: false, message: "Invalid token" },
         { status: 401 }
       );
     }
+
+    const { id: idString } = await params;
+    const id = parseInt(idString);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid user ID" },
+        { status: 400 }
+      );
+    }
+
+    const { name, email, role, active } = await request.json();
 
     // Check if the user exists
     const userResult = await db
@@ -126,7 +122,7 @@ export async function PUT(
         role: users.role,
       })
       .from(users)
-      .where(eq(users.id, userId))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (!userResult.length) {
@@ -194,7 +190,7 @@ export async function PUT(
       }
     } else {
       // Regular users can only update their own profile
-      if (payload.id !== userId) {
+      if (payload.id !== id) {
         return NextResponse.json(
           {
             success: false,
@@ -214,7 +210,7 @@ export async function PUT(
       const existingUser = await db
         .select({ id: users.id })
         .from(users)
-        .where(and(eq(users.email, email.toLowerCase()), eq(users.id, userId)))
+        .where(and(eq(users.email, email.toLowerCase()), eq(users.id, id)))
         .limit(1);
 
       if (existingUser.length) {
@@ -226,7 +222,7 @@ export async function PUT(
     }
 
     // Update the user
-    await db.update(users).set(updateData).where(eq(users.id, userId));
+    await db.update(users).set(updateData).where(eq(users.id, id));
 
     return NextResponse.json({
       success: true,
@@ -244,19 +240,9 @@ export async function PUT(
 // DELETE handler to deactivate a user (soft delete)
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Convert string ID to number
-    const userId = parseInt(params.id, 10);
-    if (isNaN(userId)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid user ID" },
-        { status: 400 }
-      );
-    }
-
-    // Get the auth token from cookies
     const token = request.cookies.get("auth_token")?.value;
 
     if (!token) {
@@ -266,13 +252,21 @@ export async function DELETE(
       );
     }
 
-    // Verify the token
     const payload = verifyToken(token);
-
     if (!payload) {
       return NextResponse.json(
         { success: false, message: "Invalid token" },
         { status: 401 }
+      );
+    }
+
+    const { id: idString } = await params;
+    const id = parseInt(idString);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid user ID" },
+        { status: 400 }
       );
     }
 
@@ -291,7 +285,7 @@ export async function DELETE(
         role: users.role,
       })
       .from(users)
-      .where(eq(users.id, userId))
+      .where(eq(users.id, id))
       .limit(1);
 
     if (!userResult.length) {
@@ -328,7 +322,7 @@ export async function DELETE(
         active: false,
         updatedAt: new Date(),
       })
-      .where(eq(users.id, userId));
+      .where(eq(users.id, id));
 
     return NextResponse.json({
       success: true,

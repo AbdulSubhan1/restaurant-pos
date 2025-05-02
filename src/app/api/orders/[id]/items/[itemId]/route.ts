@@ -9,7 +9,7 @@ import { verifyToken } from "@/lib/auth-utils";
 // PUT /api/orders/[id]/items/[itemId] - Update an order item (quantity, notes, status)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; itemId: string } }
+  { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -25,9 +25,9 @@ export async function PUT(
       return NextResponse.json({ message: "Invalid token" }, { status: 401 });
     }
 
-    const paramsData = await params;
-    const orderId = parseInt(paramsData.id);
-    const itemId = parseInt(paramsData.itemId);
+    const { id: orderIdString, itemId: itemIdString } = await params;
+    const orderId = parseInt(orderIdString);
+    const itemId = parseInt(itemIdString);
 
     if (isNaN(orderId) || isNaN(itemId)) {
       return NextResponse.json(
@@ -88,7 +88,15 @@ export async function PUT(
     const body = await request.json();
     const { quantity, notes, status } = body;
 
-    const updateData: any = {
+    interface OrderItemUpdate {
+      updatedAt: Date;
+      quantity?: number;
+      notes?: string | null;
+      status?: string;
+      completedAt?: Date;
+    }
+
+    const updateData: OrderItemUpdate = {
       updatedAt: new Date(),
     };
 
@@ -180,7 +188,7 @@ export async function PUT(
 // DELETE /api/orders/[id]/items/[itemId] - Remove an item from an order
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; itemId: string } }
+  { params }: { params: Promise<{ id: string; itemId: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -196,9 +204,9 @@ export async function DELETE(
       return NextResponse.json({ message: "Invalid token" }, { status: 401 });
     }
 
-    const paramsData = await params;
-    const orderId = parseInt(paramsData.id);
-    const itemId = parseInt(paramsData.itemId);
+    const { id: orderIdString, itemId: itemIdString } = await params;
+    const orderId = parseInt(orderIdString);
+    const itemId = parseInt(itemIdString);
 
     if (isNaN(orderId) || isNaN(itemId)) {
       return NextResponse.json(

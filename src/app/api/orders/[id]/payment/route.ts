@@ -13,32 +13,32 @@ import { v4 as uuidv4 } from "uuid";
 // POST /api/orders/[id]/payment - Process payment for an order
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Verify user authentication
     const token = request.cookies.get("auth_token")?.value;
+
     if (!token) {
       return NextResponse.json(
-        { message: "Authentication required" },
+        { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
-    const userId = await verifyToken(token);
-    if (!userId) {
+    const payload = verifyToken(token);
+    if (!payload) {
       return NextResponse.json(
-        { message: "Invalid authentication token" },
+        { success: false, message: "Invalid token" },
         { status: 401 }
       );
     }
 
-    const paramsData = await params;
-    const orderId = parseInt(paramsData.id);
+    const { id: orderIdString } = await params;
+    const orderId = parseInt(orderIdString);
 
     if (isNaN(orderId)) {
       return NextResponse.json(
-        { message: "Invalid order ID" },
+        { success: false, message: "Invalid order ID" },
         { status: 400 }
       );
     }
@@ -160,8 +160,8 @@ export async function POST(
         reference,
         notes: notes || null,
         metadata: {
-          serverName: userId.name || "Staff",
-          serverId: userId.id,
+          serverName: payload.name || "Staff",
+          serverId: payload.id,
           paymentProcessor: "manual", // Since we don't have an actual payment processor
           amountPaid: paid.toString(),
           change: (paid - finalAmount).toString(),
@@ -192,7 +192,7 @@ export async function POST(
       paymentMethod,
       paidAt: new Date().toISOString(),
       paymentStatus: PAYMENT_STATUSES.COMPLETED,
-      server: userId.name || "Staff",
+      server: payload.name || "Staff",
       transactionId: paymentRecord.reference,
     };
 

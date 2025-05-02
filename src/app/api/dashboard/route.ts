@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { orders, orderItems, tables, menuItems, payments } from "@/db/schema";
-import { eq, sql, and, gte, count, sum } from "drizzle-orm";
+import { eq, sql, and, gte, count } from "drizzle-orm";
 
 export async function GET() {
   try {
@@ -14,9 +14,6 @@ export async function GET() {
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay());
     startOfWeek.setHours(0, 0, 0, 0);
-
-    // Start of month
-    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
 
     // Get today's orders count
     const todayOrdersCount = await db
@@ -87,7 +84,7 @@ export async function GET() {
       .groupBy(orderItems.menuItemId, menuItems.name)
       // Using raw SQL for ordering to avoid type errors
       .orderBy(
-        (eb) =>
+        () =>
           sql`sum(CAST(${orderItems.price} AS numeric) * ${orderItems.quantity}) desc`
       )
       .limit(5);

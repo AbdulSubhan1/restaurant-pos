@@ -7,21 +7,11 @@ import { eq } from "drizzle-orm";
 // GET /api/tables/[id] - Get a specific table
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const paramsData = await params;
-    const id = Number(paramsData.id);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: "Invalid table ID" },
-        { status: 400 }
-      );
-    }
-
-    // Verify authentication
     const token = request.cookies.get("auth_token")?.value;
+
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
@@ -34,6 +24,16 @@ export async function GET(
       return NextResponse.json(
         { success: false, message: "Invalid token" },
         { status: 401 }
+      );
+    }
+
+    const { id: idString } = await params;
+    const id = parseInt(idString);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid table ID" },
+        { status: 400 }
       );
     }
 
@@ -64,21 +64,11 @@ export async function GET(
 // PUT /api/tables/[id] - Update a table
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const paramsData = await params;
-    const id = Number(paramsData.id);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: "Invalid table ID" },
-        { status: 400 }
-      );
-    }
-
-    // Verify authentication
     const token = request.cookies.get("auth_token")?.value;
+
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
@@ -99,6 +89,16 @@ export async function PUT(
       return NextResponse.json(
         { success: false, message: "Unauthorized - Insufficient permissions" },
         { status: 403 }
+      );
+    }
+
+    const { id: idString } = await params;
+    const id = parseInt(idString);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid table ID" },
+        { status: 400 }
       );
     }
 
@@ -157,21 +157,11 @@ export async function PUT(
 // DELETE /api/tables/[id] - Soft delete a table
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const paramsData = await params;
-    const id = Number(paramsData.id);
-
-    if (isNaN(id)) {
-      return NextResponse.json(
-        { message: "Invalid table ID" },
-        { status: 400 }
-      );
-    }
-
-    // Verify authentication
     const token = request.cookies.get("auth_token")?.value;
+
     if (!token) {
       return NextResponse.json(
         { success: false, message: "Authentication required" },
@@ -192,6 +182,16 @@ export async function DELETE(
       return NextResponse.json(
         { success: false, message: "Unauthorized - Insufficient permissions" },
         { status: 403 }
+      );
+    }
+
+    const { id: idString } = await params;
+    const id = parseInt(idString);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid table ID" },
+        { status: 400 }
       );
     }
 

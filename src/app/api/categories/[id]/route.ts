@@ -7,7 +7,7 @@ import { verifyToken } from "@/lib/auth-utils";
 // GET /api/categories/[id] - Get a specific category by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -27,8 +27,8 @@ export async function GET(
       );
     }
 
-    const paramsData = await params;
-    const id = parseInt(paramsData.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     if (isNaN(id)) {
       return NextResponse.json(
@@ -66,7 +66,7 @@ export async function GET(
 // PUT /api/categories/[id] - Update a category
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -94,8 +94,8 @@ export async function PUT(
       );
     }
 
-    const paramsData = await params;
-    const id = parseInt(paramsData.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     if (isNaN(id)) {
       return NextResponse.json(
@@ -156,7 +156,7 @@ export async function PUT(
 // DELETE /api/categories/[id] - Delete a category
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -184,8 +184,8 @@ export async function DELETE(
       );
     }
 
-    const paramsData = await params;
-    const id = parseInt(paramsData.id);
+    const { id: idString } = await params;
+    const id = parseInt(idString);
 
     if (isNaN(id)) {
       return NextResponse.json(

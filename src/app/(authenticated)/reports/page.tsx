@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -90,11 +90,7 @@ export default function ReportsPage() {
   const [data, setData] = useState<ReportsData | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchReportsData();
-  }, [period]);
-
-  const fetchReportsData = async () => {
+  const fetchReportsData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -114,7 +110,11 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
+
+  useEffect(() => {
+    fetchReportsData();
+  }, [period, fetchReportsData]);
 
   // Chart configurations
   const popularItemsChartData = {
@@ -141,22 +141,6 @@ export default function ReportsPage() {
           "rgba(255, 206, 86, 0.5)",
           "rgba(75, 192, 192, 0.5)",
           "rgba(153, 102, 255, 0.5)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const tableOccupancyChartData = {
-    labels: data?.tableOccupancy.map((status) => status.status) || [],
-    datasets: [
-      {
-        label: "Tables",
-        data: data?.tableOccupancy.map((status) => status.count) || [],
-        backgroundColor: [
-          "rgba(75, 192, 192, 0.5)",
-          "rgba(255, 99, 132, 0.5)",
-          "rgba(255, 206, 86, 0.5)",
         ],
         borderWidth: 1,
       },

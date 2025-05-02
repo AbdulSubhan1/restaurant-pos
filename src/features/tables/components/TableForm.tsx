@@ -32,7 +32,7 @@ const tableSchema = z.object({
   capacity: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Capacity must be a positive number",
   }),
-  status: z.string().default("available"),
+  status: z.string(),
   notes: z.string().optional().nullable(),
   xPosition: z.string().optional(),
   yPosition: z.string().optional(),

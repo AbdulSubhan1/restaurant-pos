@@ -34,7 +34,7 @@ const menuItemSchema = z.object({
     .min(0.01, "Price must be greater than 0")
     .max(9999.99, "Price must be less than 10,000"),
   categoryId: z.string().optional(),
-  available: z.boolean().default(true),
+  available: z.boolean(),
   preparationTime: z.coerce
     .number()
     .min(0, "Preparation time cannot be negative")
@@ -43,7 +43,15 @@ const menuItemSchema = z.object({
   // Image is handled separately
 });
 
-type MenuItemFormValues = z.infer<typeof menuItemSchema>;
+// Define the form values type based on the schema
+interface MenuItemFormValues {
+  name: string;
+  price: number;
+  available: boolean;
+  description?: string;
+  categoryId?: string;
+  preparationTime?: number;
+}
 
 // Props for the menu item form component
 interface MenuItemFormProps {
@@ -88,7 +96,6 @@ export default function MenuItemForm({
     formState: { errors },
     setValue,
     watch,
-    control,
   } = useForm<MenuItemFormValues>({
     resolver: zodResolver(menuItemSchema),
     defaultValues: {

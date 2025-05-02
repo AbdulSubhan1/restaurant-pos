@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +43,6 @@ import {
   Search,
   Plus,
   Edit,
-  Trash2,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
@@ -110,12 +109,7 @@ export default function UsersPage() {
   const [newPassword, setNewPassword] = useState("");
 
   // Fetch users on component mount and when filters or pagination changes
-  useEffect(() => {
-    fetchUsers();
-  }, [pagination.page, roleFilter, statusFilter]);
-
-  // Function to fetch users
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
 
@@ -161,7 +155,11 @@ export default function UsersPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [pagination, roleFilter, statusFilter, searchTerm]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   // Function to handle search
   const handleSearch = () => {
@@ -394,12 +392,6 @@ export default function UsersPage() {
       password: "", // Empty password field for edit
     });
     setShowEditDialog(true);
-  };
-
-  // Function to open delete dialog
-  const openDeleteDialog = (user: User) => {
-    setSelectedUser(user);
-    setShowDeleteDialog(true);
   };
 
   // Function to open reset password dialog

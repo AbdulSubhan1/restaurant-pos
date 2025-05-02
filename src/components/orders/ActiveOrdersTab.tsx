@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Clock, Check, X, ArrowRight } from "lucide-react";
+import { Plus, Clock, Check, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import CreateOrderDialog from "./CreateOrderDialog";
 import OrderCard from "./OrderCard";
@@ -34,6 +34,22 @@ type Order = {
   updatedAt: string;
   completedAt: string | null;
   items: OrderItem[];
+};
+
+// Define a new type for OrderItem in form submissions that matches CreateOrderDialog
+type OrderItemInput = {
+  menuItemId: number;
+  menuItemName: string;
+  quantity: number;
+  price: string;
+  notes: string;
+};
+
+// Define the OrderData type for new orders
+type OrderData = {
+  tableId: number;
+  notes: string;
+  items: OrderItemInput[];
 };
 
 export default function ActiveOrdersTab() {
@@ -152,7 +168,7 @@ export default function ActiveOrdersTab() {
   };
 
   // Function to add a new order
-  const handleAddOrder = async (orderData: any) => {
+  const handleAddOrder = async (orderData: OrderData) => {
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -349,7 +365,11 @@ export default function ActiveOrdersTab() {
       {isCreatingOrder && (
         <CreateOrderDialog
           onClose={() => setIsCreatingOrder(false)}
-          onSubmit={handleAddOrder}
+          onSubmit={(data: {
+            tableId: number;
+            notes: string;
+            items: OrderItemInput[];
+          }) => handleAddOrder(data)}
         />
       )}
 
