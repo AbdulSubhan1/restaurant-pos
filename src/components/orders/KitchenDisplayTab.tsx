@@ -73,10 +73,20 @@ export default function KitchenDisplayTab() {
         credentials: "include",
       });
 
+      // Fetch ready orders
+      const readyResponse = await fetch("/api/orders?status=ready", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
       const pendingData = await pendingResponse.json();
       const startedData = await startedResponse.json();
+      const readyData = await readyResponse.json();
 
-      if (!pendingResponse.ok || !startedResponse.ok) {
+      if (!pendingResponse.ok || !startedResponse.ok || !readyResponse.ok) {
         throw new Error("Failed to fetch orders");
       }
 
@@ -84,6 +94,7 @@ export default function KitchenDisplayTab() {
       const allOrders = [
         ...(pendingData.orders || []),
         ...(startedData.orders || []),
+        ...(readyData.orders || []),
       ];
 
       setOrders(allOrders);
@@ -232,8 +243,21 @@ export default function KitchenDisplayTab() {
 
   // Sort orders: pending first, then by creation time (oldest first)
   const sortedOrders = [...orders].sort((a, b) => {
-    if (a.status === "pending" && b.status !== "pending") return -1;
-    if (a.status !== "pending" && b.status === "pending") return 1;
+    // First by status priority (pending > in-progress > ready)
+    const statusPriority = {
+      pending: 0,
+      "in-progress": 1,
+      ready: 2,
+    };
+
+    const priorityA =
+      statusPriority[a.status as keyof typeof statusPriority] || 999;
+    const priorityB =
+      statusPriority[b.status as keyof typeof statusPriority] || 999;
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
 
     // Then by creation time (oldest first)
     return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -277,6 +301,28 @@ export default function KitchenDisplayTab() {
     });
 
     return counts;
+  };
+
+  // Get status badge class
+  const getStatusClass = (status: string) => {
+    switch (status) {
+      case "pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "in-progress":
+        return "bg-blue-100 text-blue-800";
+      case "ready":
+        return "bg-green-100 text-green-800";
+      case "served":
+        return "bg-purple-100 text-purple-800";
+      case "completed":
+        return "bg-indigo-100 text-indigo-800";
+      case "paid":
+        return "bg-blue-100 text-blue-800";
+      case "cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   };
 
   return (
@@ -325,7 +371,15 @@ export default function KitchenDisplayTab() {
                 key={order.id}
                 className={`${isUrgent ? "border-red-500 border-2" : ""}`}
               >
-                <CardHeader className={`pb-2 ${isUrgent ? "bg-red-50" : ""}`}>
+                <CardHeader
+                  className={`pb-2 ${
+                    isUrgent
+                      ? "bg-red-50"
+                      : order.status === "ready"
+                      ? "bg-green-50"
+                      : ""
+                  }`}
+                >
                   <div className="flex justify-between items-center">
                     <CardTitle className="flex items-center">
                       {isUrgent && (
@@ -486,6 +540,17 @@ export default function KitchenDisplayTab() {
                             <AlertCircle className="ml-2 h-4 w-4" />
                           </>
                         )}
+                      </Button>
+                    )}
+
+                    {order.status === "ready" && (
+                      <Button
+                        className="w-full bg-purple-500 hover:bg-purple-600"
+                        onClick={() =>
+                          handleOrderStatusUpdate(order.id, "served")
+                        }
+                      >
+                        Mark as Served <Check className="ml-2 h-4 w-4" />
                       </Button>
                     )}
                   </div>
