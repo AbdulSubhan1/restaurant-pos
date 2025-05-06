@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Clock, Check, ArrowRight, Bell } from "lucide-react";
+import { Clock, Check, ArrowRight, Bell, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 
 // Define the types (same as in other tabs)
@@ -97,12 +97,28 @@ export default function KitchenDisplayTab() {
     }
   };
 
+  // Function to check if all items in an order are ready
+  const areAllItemsReady = (order: Order): boolean => {
+    return order.items.every((item) => item.status === "ready");
+  };
+
   // Function to update order status
   const handleOrderStatusUpdate = async (
     orderId: number,
     newStatus: string
   ) => {
     try {
+      // If attempting to mark as ready, check if all items are ready
+      if (newStatus === "ready") {
+        const order = orders.find((o) => o.id === orderId);
+        if (order && !areAllItemsReady(order)) {
+          toast.error(
+            "All items must be ready before marking the order as ready for service"
+          );
+          return;
+        }
+      }
+
       const response = await fetch(`/api/orders/${orderId}`, {
         method: "PUT",
         headers: {
@@ -229,6 +245,25 @@ export default function KitchenDisplayTab() {
     );
   };
 
+  // Get a count of items by status for an order
+  const getItemStatusCounts = (order: Order) => {
+    const counts = {
+      pending: 0,
+      "in-progress": 0,
+      "in-process": 0,
+      ready: 0,
+      total: order.items.length,
+    };
+
+    order.items.forEach((item) => {
+      if (counts.hasOwnProperty(item.status)) {
+        counts[item.status as keyof typeof counts] += 1;
+      }
+    });
+
+    return counts;
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -267,6 +302,8 @@ export default function KitchenDisplayTab() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {sortedOrders.map((order) => {
             const isUrgent = isOrderUrgent(order);
+            const statusCounts = getItemStatusCounts(order);
+            const allReady = areAllItemsReady(order);
 
             return (
               <Card
@@ -295,6 +332,22 @@ export default function KitchenDisplayTab() {
                     <span>
                       Status:{" "}
                       {order.status === "pending" ? "Pending" : "In Progress"}
+                    </span>
+                  </div>
+
+                  {/* Item status summary */}
+                  <div className="flex gap-2 mt-2 text-xs">
+                    <span className="px-2 py-1 rounded bg-red-100 text-red-700">
+                      Pending: {statusCounts.pending}
+                    </span>
+                    <span className="px-2 py-1 rounded bg-blue-100 text-blue-700">
+                      In Progress: {statusCounts["in-progress"]}
+                    </span>
+                    <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700">
+                      In Process: {statusCounts["in-process"]}
+                    </span>
+                    <span className="px-2 py-1 rounded bg-green-100 text-green-700">
+                      Ready: {statusCounts.ready}/{statusCounts.total}
                     </span>
                   </div>
                 </CardHeader>
@@ -344,6 +397,23 @@ export default function KitchenDisplayTab() {
                                   handleItemStatusUpdate(
                                     order.id,
                                     item.id,
+                                    "in-process"
+                                  )
+                                }
+                                className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                              >
+                                In Process
+                              </Button>
+                            )}
+
+                            {item.status === "in-process" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  handleItemStatusUpdate(
+                                    order.id,
+                                    item.id,
                                     "ready"
                                   )
                                 }
@@ -378,13 +448,27 @@ export default function KitchenDisplayTab() {
 
                     {order.status === "in-progress" && (
                       <Button
-                        className="w-full bg-green-500 hover:bg-green-600"
+                        className={`w-full ${
+                          allReady
+                            ? "bg-green-500 hover:bg-green-600"
+                            : "bg-gray-400 hover:bg-gray-500"
+                        }`}
                         onClick={() =>
                           handleOrderStatusUpdate(order.id, "ready")
                         }
+                        disabled={!allReady}
                       >
-                        Order Ready for Service{" "}
-                        <Check className="ml-2 h-4 w-4" />
+                        {allReady ? (
+                          <>
+                            Order Ready for Service{" "}
+                            <Check className="ml-2 h-4 w-4" />
+                          </>
+                        ) : (
+                          <>
+                            Waiting for Items{" "}
+                            <AlertCircle className="ml-2 h-4 w-4" />
+                          </>
+                        )}
                       </Button>
                     )}
                   </div>
