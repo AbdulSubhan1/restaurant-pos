@@ -21,7 +21,6 @@ export function TableLayout() {
   const router = useRouter();
 
   const fetchTables = async () => {
-    setIsLoading(true);
     try {
       const response = await fetch("/api/tables");
       const data = await response.json();
@@ -40,6 +39,7 @@ export function TableLayout() {
   };
 
   useEffect(() => {
+    setIsLoading(true);
     fetchTables();
   }, []);
 
