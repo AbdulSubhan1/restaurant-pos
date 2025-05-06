@@ -159,7 +159,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-  }, [fetchUsers]);
+  }, []);
 
   // Function to handle search
   const handleSearch = () => {
