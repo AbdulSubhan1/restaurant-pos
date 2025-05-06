@@ -26,5 +26,6 @@ eslintConfig.push({
     "prefer-const": "off",
     "@typescript-eslint/no-unused-vars": "off",
     "@typescript-eslint/no-require-imports": "off",
+    "react/no-unescaped-entities": "off",
   },
 });
