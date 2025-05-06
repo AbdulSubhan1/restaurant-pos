@@ -38,3 +38,6 @@ next-env.d.ts
 
 # drizzle
 /src/db/migrations/.snapshot.json
+
+# analytics data
+/data/*.json

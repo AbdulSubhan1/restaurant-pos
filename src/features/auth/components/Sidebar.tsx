@@ -100,6 +100,12 @@ export function Sidebar() {
           roles: ["admin", "manager"],
         },
         {
+          label: "Analytics",
+          href: "/analytics",
+          icon: <BarChart className="h-5 w-5" />,
+          roles: ["admin"],
+        },
+        {
           label: "Users",
           href: "/users",
           icon: <Users className="h-5 w-5" />,

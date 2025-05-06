@@ -6,8 +6,14 @@ import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { CategoryTabs } from "@/components/menu/CategoryTabs";
 import { CategorySection } from "@/components/menu/CategorySection";
+import { useMenuAnalytics } from "@/hooks/useAnalytics";
+import { usePerformanceMonitoring } from "@/hooks/usePerformance";
 
 export default function MenuPage() {
+  // Set up analytics and performance monitoring
+  const { trackCategoryView } = useMenuAnalytics();
+  const { reportError } = usePerformanceMonitoring();
+
   const [menuData, setMenuData] = useState<PublicMenuResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -29,21 +35,36 @@ export default function MenuPage() {
         // Set the first category as active if menu has categories
         if (data.menu && data.menu.length > 0) {
           setActiveCategory(data.menu[0].id);
+
+          // Track initial category view
+          trackCategoryView(data.menu[0].id, data.menu[0].name);
         }
       } catch (err) {
         console.error("Error fetching menu:", err);
         setError("Could not load the menu. Please try again later.");
+
+        // Report the error to our tracking system
+        if (err instanceof Error) {
+          reportError(err, { context: "MenuPage - fetchMenu" });
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchMenu();
-  }, []);
+  }, [trackCategoryView, reportError]);
 
-  // Handle category change
+  // Handle category change with analytics tracking
   const handleCategoryChange = (categoryId: number) => {
     setActiveCategory(categoryId);
+
+    // Find the category name for tracking
+    const category = menuData?.menu.find((cat) => cat.id === categoryId);
+    if (category) {
+      // Track this category view
+      trackCategoryView(categoryId, category.name);
+    }
 
     // Smooth scroll to the category section
     const element = document.getElementById(`category-${categoryId}`);
