@@ -29,7 +29,6 @@ export function TablesList() {
   const router = useRouter();
 
   const fetchTables = async () => {
-    setIsLoading(true);
     try {
       const response = await fetch("/api/tables");
       const data = await response.json();
@@ -48,19 +47,51 @@ export function TablesList() {
   };
 
   useEffect(() => {
+    setIsLoading(true);
     fetchTables();
   }, []);
 
-  const getStatusBadge = (status: string) => {
+  // Function to update table status (simplified for demo)
+  const toggleTableStatus = async (tableId: number, currentStatus: string) => {
+    const newStatus = currentStatus === "available" ? "occupied" : "available";
+
+    try {
+      const response = await fetch(`/api/tables/${tableId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to update table status");
+      }
+
+      // Refresh tables after update
+      fetchTables();
+      toast.success(`Table status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating table status:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update table status"
+      );
+    }
+  };
+
+  const getStatusBadge = (id: number, status: string) => {
     switch (status.toLowerCase()) {
       case "available":
-        return <Badge className="bg-green-500">Available</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-green-500">Available</Badge>;
       case "occupied":
-        return <Badge className="bg-red-500">Occupied</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-red-500">Occupied</Badge>;
       case "reserved":
-        return <Badge className="bg-yellow-500">Reserved</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-yellow-500">Reserved</Badge>;
       case "maintenance":
-        return <Badge className="bg-gray-500">Maintenance</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-gray-500">Maintenance</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -122,7 +153,7 @@ export function TablesList() {
                 <TableRow key={table.id}>
                   <TableCell className="font-medium">{table.name}</TableCell>
                   <TableCell>{table.capacity}</TableCell>
-                  <TableCell>{getStatusBadge(table.status)}</TableCell>
+                  <TableCell>{getStatusBadge(table.id, table.status)}</TableCell>
                   <TableCell>{table.notes || "-"}</TableCell>
                   <TableCell className="text-right">
                     <Button
