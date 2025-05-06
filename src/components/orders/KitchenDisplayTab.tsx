@@ -64,8 +64,8 @@ export default function KitchenDisplayTab() {
         credentials: "include",
       });
 
-      // Fetch in-progress orders
-      const inProgressResponse = await fetch("/api/orders?status=in-progress", {
+      // Fetch in-progress orders (now called "started")
+      const startedResponse = await fetch("/api/orders?status=in-progress", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -74,16 +74,16 @@ export default function KitchenDisplayTab() {
       });
 
       const pendingData = await pendingResponse.json();
-      const inProgressData = await inProgressResponse.json();
+      const startedData = await startedResponse.json();
 
-      if (!pendingResponse.ok || !inProgressResponse.ok) {
+      if (!pendingResponse.ok || !startedResponse.ok) {
         throw new Error("Failed to fetch orders");
       }
 
       // Combine all orders
       const allOrders = [
         ...(pendingData.orders || []),
-        ...(inProgressData.orders || []),
+        ...(startedData.orders || []),
       ];
 
       setOrders(allOrders);
@@ -181,7 +181,14 @@ export default function KitchenDisplayTab() {
         prev.map((order) => (order.id === orderId ? data.order : order))
       );
 
-      toast.success(`Item marked as ${newStatus}`);
+      // Create a human-readable status message
+      let statusMessage = newStatus;
+      if (newStatus === "pending") statusMessage = "pending";
+      if (newStatus === "in-progress") statusMessage = "started";
+      if (newStatus === "in-process") statusMessage = "cooking";
+      if (newStatus === "ready") statusMessage = "ready";
+
+      toast.success(`Item marked as ${statusMessage}`);
 
       // Check if all items are ready, if so, suggest marking the order as ready
       const updatedOrder = data.order;
@@ -247,18 +254,26 @@ export default function KitchenDisplayTab() {
 
   // Get a count of items by status for an order
   const getItemStatusCounts = (order: Order) => {
+    // Initialize with new status names
     const counts = {
       pending: 0,
-      "in-progress": 0,
-      "in-process": 0,
+      started: 0,
+      cooking: 0,
       ready: 0,
       total: order.items.length,
     };
 
     order.items.forEach((item) => {
-      if (counts.hasOwnProperty(item.status)) {
-        counts[item.status as keyof typeof counts] += 1;
-      }
+      // Map old status names to new ones
+      let countKey: keyof typeof counts;
+
+      if (item.status === "pending") countKey = "pending";
+      else if (item.status === "in-progress") countKey = "started";
+      else if (item.status === "in-process") countKey = "cooking";
+      else if (item.status === "ready") countKey = "ready";
+      else countKey = "pending"; // Default fallback
+
+      counts[countKey] += 1;
     });
 
     return counts;
@@ -341,10 +356,10 @@ export default function KitchenDisplayTab() {
                       Pending: {statusCounts.pending}
                     </span>
                     <span className="px-2 py-1 rounded bg-blue-100 text-blue-700">
-                      In Progress: {statusCounts["in-progress"]}
+                      Started: {statusCounts.started}
                     </span>
                     <span className="px-2 py-1 rounded bg-yellow-100 text-yellow-700">
-                      In Process: {statusCounts["in-process"]}
+                      Cooking: {statusCounts.cooking}
                     </span>
                     <span className="px-2 py-1 rounded bg-green-100 text-green-700">
                       Ready: {statusCounts.ready}/{statusCounts.total}
@@ -381,7 +396,7 @@ export default function KitchenDisplayTab() {
                                   handleItemStatusUpdate(
                                     order.id,
                                     item.id,
-                                    "in-progress"
+                                    "started"
                                   )
                                 }
                               >
@@ -389,7 +404,8 @@ export default function KitchenDisplayTab() {
                               </Button>
                             )}
 
-                            {item.status === "in-progress" && (
+                            {(item.status === "in-progress" ||
+                              item.status === "started") && (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -397,16 +413,17 @@ export default function KitchenDisplayTab() {
                                   handleItemStatusUpdate(
                                     order.id,
                                     item.id,
-                                    "in-process"
+                                    "cooking"
                                   )
                                 }
                                 className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
                               >
-                                In Process
+                                Cooking
                               </Button>
                             )}
 
-                            {item.status === "in-process" && (
+                            {(item.status === "in-process" ||
+                              item.status === "cooking") && (
                               <Button
                                 size="sm"
                                 variant="outline"
