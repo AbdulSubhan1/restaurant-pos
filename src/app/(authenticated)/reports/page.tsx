@@ -147,7 +147,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchReportsData();
-  }, [period, fetchReportsData]);
+  }, [period, filterType, startDate, endDate, fetchReportsData]);
 
   // Switch to period-based filtering
   const switchToPeriodFilter = (newPeriod: string) => {
@@ -162,7 +162,6 @@ export default function ReportsPage() {
     if (startDate) {
       setFilterType("dateRange");
       setIsDatePickerOpen(false);
-      fetchReportsData();
     }
   };
 
@@ -228,6 +227,17 @@ export default function ReportsPage() {
 
   return (
     <div className="p-6">
+      {process.env.NODE_ENV === "development" && (
+        <div className="bg-gray-100 p-2 mb-4 rounded text-xs">
+          <strong>Debug:</strong> FilterType: {filterType} |
+          {filterType === "period"
+            ? ` Period: ${period}`
+            : ` Date Range: ${startDate?.toISOString() || "none"} to ${
+                endDate?.toISOString() || "none"
+              }`}
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Reports</h1>
         <div className="flex gap-2 items-center">
