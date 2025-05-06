@@ -3,7 +3,14 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Clock, Check, ArrowRight } from "lucide-react";
+import {
+  Plus,
+  Clock,
+  Check,
+  ArrowRight,
+  Utensils,
+  CheckCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import CreateOrderDialog from "./CreateOrderDialog";
 import OrderCard from "./OrderCard";
@@ -104,11 +111,26 @@ export default function ActiveOrdersTab() {
         credentials: "include",
       });
 
+      // Fetch served orders
+      const servedResponse = await fetch("/api/orders?status=served", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
       const pendingData = await pendingResponse.json();
       const inProgressData = await inProgressResponse.json();
       const readyData = await readyResponse.json();
+      const servedData = await servedResponse.json();
 
-      if (!pendingResponse.ok || !inProgressResponse.ok || !readyResponse.ok) {
+      if (
+        !pendingResponse.ok ||
+        !inProgressResponse.ok ||
+        !readyResponse.ok ||
+        !servedResponse.ok
+      ) {
         throw new Error("Failed to fetch orders");
       }
 
@@ -117,6 +139,7 @@ export default function ActiveOrdersTab() {
         ...(pendingData.orders || []),
         ...(inProgressData.orders || []),
         ...(readyData.orders || []),
+        ...(servedData.orders || []),
       ];
 
       setOrders(allOrders);
@@ -203,6 +226,7 @@ export default function ActiveOrdersTab() {
     (order) => order.status === "in-progress"
   );
   const readyOrders = orders.filter((order) => order.status === "ready");
+  const servedOrders = orders.filter((order) => order.status === "served");
 
   return (
     <div>
@@ -285,14 +309,14 @@ export default function ActiveOrdersTab() {
           <Card className="mb-4">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
-                <Clock className="mr-2 h-5 w-5 text-blue-500" />
+                <Utensils className="mr-2 h-5 w-5 text-blue-500" />
                 In Progress
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {inProgressOrders.length === 0 ? (
                 <p className="text-center text-gray-500 py-2">
-                  No orders in progress
+                  No in-progress orders
                 </p>
               ) : (
                 inProgressOrders.map((order) => (
@@ -324,36 +348,79 @@ export default function ActiveOrdersTab() {
           <Card className="mb-4">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
-                <Check className="mr-2 h-5 w-5 text-green-500" />
-                Ready to Serve
+                <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+                Ready for Service
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {readyOrders.length === 0 ? (
                 <p className="text-center text-gray-500 py-2">
-                  No orders ready to serve
+                  No orders ready for service
                 </p>
               ) : (
                 readyOrders.map((order) => (
-                  <OrderCard
-                    key={order.id}
-                    order={order}
-                    onViewDetails={() => {
-                      setSelectedOrder(order);
-                      setShowDetails(true);
-                    }}
-                    actionButton={
+                  <div key={order.id} className="relative">
+                    <OrderCard
+                      order={order}
+                      onViewDetails={() => {
+                        setSelectedOrder(order);
+                        setShowDetails(true);
+                      }}
+                    />
+                    <div className="mt-2 flex justify-end">
                       <Button
                         size="sm"
+                        variant="outline"
+                        className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                        onClick={() => handleStatusUpdate(order.id, "served")}
+                      >
+                        Mark as Served
+                      </Button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Served Orders Column */}
+        <div>
+          <Card className="mb-4">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center">
+                <Check className="mr-2 h-5 w-5 text-purple-500" />
+                Served Orders
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {servedOrders.length === 0 ? (
+                <p className="text-center text-gray-500 py-2">
+                  No served orders
+                </p>
+              ) : (
+                servedOrders.map((order) => (
+                  <div key={order.id} className="relative">
+                    <OrderCard
+                      order={order}
+                      onViewDetails={() => {
+                        setSelectedOrder(order);
+                        setShowDetails(true);
+                      }}
+                    />
+                    <div className="mt-2 flex justify-end">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
                         onClick={() =>
                           handleStatusUpdate(order.id, "completed")
                         }
-                        className="w-full bg-purple-500 hover:bg-purple-600"
                       >
-                        Complete Order <Check className="ml-2 h-4 w-4" />
+                        Complete Order
                       </Button>
-                    }
-                  />
+                    </div>
+                  </div>
                 ))
               )}
             </CardContent>

@@ -104,6 +104,8 @@ export default function OrderDetailsDialog({
         return "bg-blue-100 text-blue-800";
       case "ready":
         return "bg-green-100 text-green-800";
+      case "served":
+        return "bg-purple-100 text-purple-800";
       case "completed":
         return "bg-purple-100 text-purple-800";
       case "paid":
@@ -241,17 +243,27 @@ export default function OrderDetailsDialog({
 
               {order.status === "ready" && (
                 <Button
-                  onClick={() => handleStatusChange("completed")}
+                  onClick={() => handleStatusChange("served")}
                   className="w-full bg-purple-500 hover:bg-purple-600"
+                >
+                  <Check className="mr-2 h-4 w-4" /> Mark as Served
+                </Button>
+              )}
+
+              {order.status === "served" && (
+                <Button
+                  onClick={() => handleStatusChange("completed")}
+                  className="w-full bg-indigo-500 hover:bg-indigo-600"
                 >
                   <Check className="mr-2 h-4 w-4" /> Complete Order
                 </Button>
               )}
 
-              {(order.status === "completed" || order.status === "ready") && (
+              {order.status !== "paid" && order.status !== "cancelled" && (
                 <Button
                   onClick={handleProcessPayment}
-                  className="w-full bg-blue-500 hover:bg-blue-600"
+                  variant="outline"
+                  className="w-full mt-2"
                 >
                   <CreditCard className="mr-2 h-4 w-4" /> Process Payment
                 </Button>

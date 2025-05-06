@@ -121,7 +121,8 @@ export async function PUT(
       // Validate status
       const validStatuses = [
         "pending",
-        "in-progress",
+        "started",
+        "cooking",
         "ready",
         "served",
         "cancelled",
