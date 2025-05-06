@@ -14,6 +14,7 @@ import {
   Users,
   ChevronDown,
   Settings,
+  QrCode,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -62,9 +63,14 @@ export function Sidebar() {
           icon: <Utensils className="h-5 w-5" />,
         },
         {
-          label: "Menu",
-          href: "/menu",
+          label: "Menu Management",
+          href: "/menu-management",
           icon: <MenuSquare className="h-5 w-5" />,
+        },
+        {
+          label: "Menu QR Code",
+          href: "/menu-qr",
+          icon: <QrCode className="h-5 w-5" />,
         },
         {
           label: "Orders",
