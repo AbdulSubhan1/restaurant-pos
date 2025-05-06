@@ -24,12 +24,6 @@ export async function GET(request: Request) {
     const startDateParam = searchParams.get("startDate");
     const endDateParam = searchParams.get("endDate");
 
-    console.log("Reports API called with params:", {
-      period,
-      startDateParam,
-      endDateParam,
-    });
-
     // Get current date
     const today = new Date();
     let startDate: Date;
@@ -51,11 +45,6 @@ export async function GET(request: Request) {
         // If no valid end date, use current date as end date
         endDate.setHours(23, 59, 59, 999);
       }
-
-      console.log("Using date range:", {
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      });
     } else {
       // Default period-based filtering if no valid date range
       filterType = "period";
@@ -73,11 +62,6 @@ export async function GET(request: Request) {
           startDate = startOfDay(today);
           break;
       }
-
-      console.log("Using period:", {
-        period,
-        startDate: startDate.toISOString(),
-      });
     }
 
     // Create the date filter condition based on filter type
