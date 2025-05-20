@@ -207,13 +207,13 @@ export default function KitchenDisplayTab() {
         const allItemsReady = updatedOrder.items.every(
           (item: OrderItem) => item.status === "ready"
         );
-        if (allItemsReady && updatedOrder.status !== "ready") {
+        if (allItemsReady && updatedOrder.status !== "cooking") {
           toast.info(
             "All items for this order are ready. Consider marking the order as ready for service.",
             {
               action: {
-                label: "Mark Ready",
-                onClick: () => handleOrderStatusUpdate(orderId, "ready"),
+                label: "",
+                onClick: () => handleOrderStatusUpdate(orderId, "cooking"),
               },
             }
           );
@@ -450,7 +450,7 @@ export default function KitchenDisplayTab() {
                                   handleItemStatusUpdate(
                                     order.id,
                                     item.id,
-                                    "started"
+                                    "in-progress"
                                   )
                                 }
                               >
@@ -467,7 +467,7 @@ export default function KitchenDisplayTab() {
                                   handleItemStatusUpdate(
                                     order.id,
                                     item.id,
-                                    "cooking"
+                                    "in-process"
                                   )
                                 }
                                 className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
