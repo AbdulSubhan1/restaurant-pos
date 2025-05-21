@@ -136,31 +136,28 @@ export default function CategoriesTab() {
 
   // Function to delete a category
   const handleDeleteCategory = async (id: number) => {
-    try {
-      const response = await fetch(`/api/categories/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
+  try {
+    const response = await fetch(`/api/categories/${id}`, {
+      method: "DELETE",
+      credentials: "include",
+    });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete category");
-      }
-
-      // Remove the category from the list
-      setCategories((prev) => prev.filter((cat) => cat.id !== id));
-      toast.success("Category deleted successfully");
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to delete category"
-      );
-      console.error("Error deleting category:", err);
+    const data = await response.json();
+console.log("Delete response:", response.status, data);
+    if (!response.ok) {
+      throw new Error(data.message || "Failed to delete category");
     }
-  };
+
+    setCategories((prev) => prev.filter((cat) => cat.id !== id));
+    toast.success("Category deleted successfully");
+  } catch (err) {
+    toast.error(
+      err instanceof Error ? err.message : "Failed to delete category"
+    );
+    console.error(`Error deleting category with id ${id}:`, err);
+  }
+};
+
 
   return (
     <div>

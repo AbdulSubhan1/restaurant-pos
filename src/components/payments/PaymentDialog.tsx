@@ -339,7 +339,7 @@ export default function PaymentDialog({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <DollarSign className="mr-2 h-5 w-5" />
@@ -347,7 +347,7 @@ export default function PaymentDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-6 overflow-y-auto max-h-[70vh] pr-2">
           {/* Order Summary */}
           <div className="bg-muted p-4 rounded-md">
             <h3 className="font-medium mb-2">Order Summary</h3>

@@ -35,33 +35,31 @@ export async function GET(request: NextRequest) {
     const date = url.searchParams.get("date");
 
     // Build query conditions
-    let conditions = [];
+    
+const search = url.searchParams.get("search");
 
-    if (status) {
-      // Handle comma-separated status values
-      if (status.includes(",")) {
-        const statusValues = status.split(",").map((s) => s.trim());
-        conditions.push(
-          or(...statusValues.map((value) => eq(orders.status, value)))
-        );
-      } else {
-        conditions.push(eq(orders.status, status));
-      }
-    }
+let whereClause: any = undefined;
 
-    if (tableId) {
-      conditions.push(eq(orders.tableId, parseInt(tableId)));
-    }
-
-    if (date) {
-      // This requires more complex date handling, for simplicity we'll skip it for now
-    }
-
-    // Fetch all orders with their table information
-    let whereClause = undefined;
-    if (conditions.length > 0) {
-      whereClause = and(...conditions);
-    }
+if (search) {
+  const searchNum = Number(search);
+  if (!isNaN(searchNum)) {
+    // Search by order id or table id
+    whereClause = or(
+      eq(orders.id, searchNum),
+    );
+  }
+  else if (!isNaN(searchNum)) {
+   whereClause = or(
+      eq(orders.tableId, searchNum)
+    );
+  }
+  else {
+    // Search by tableName (case-insensitive partial match)
+    whereClause = (tables.name as any).ilike
+      ? (tables.name as any).ilike(`%${search}%`)
+      : undefined;
+  }
+}
 
     const query = db
       .select({

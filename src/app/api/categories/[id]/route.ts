@@ -156,7 +156,7 @@ export async function PUT(
 // DELETE /api/categories/[id] - Delete a category
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -184,7 +184,7 @@ export async function DELETE(
       );
     }
 
-    const { id: idString } = await params;
+    const { id: idString } =  params;
     const id = parseInt(idString);
 
     if (isNaN(id)) {
@@ -201,7 +201,7 @@ export async function DELETE(
       .where(eq(categories.id, id))
       .limit(1);
 
-    if (!existingCategory || existingCategory.length === 0) {
+     if (existingCategory.length === 0) {
       return NextResponse.json(
         { success: false, message: "Category not found" },
         { status: 404 }
@@ -213,6 +213,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
+        deletedId: id,
       message: "Category deleted successfully",
     });
   } catch (error) {
