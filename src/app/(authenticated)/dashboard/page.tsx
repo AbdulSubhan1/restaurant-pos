@@ -29,10 +29,10 @@ export default function DashboardPage() {
           />
 
           <DashboardCard
-            title="Menu"
+            title="Menu Management"
             description="Manage menu items and categories"
-            linkHref="/menu"
-            linkText="View Menu"
+            linkHref="/menu-management"
+            linkText="Manage Menu"
             iconEmoji="🍔"
           />
 

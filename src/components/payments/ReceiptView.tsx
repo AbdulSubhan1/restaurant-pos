@@ -96,9 +96,8 @@ export default function ReceiptView({
   onClose,
 }: ReceiptViewProps) {
   // Format the receipt number with leading zeros
-  const formattedReceiptNumber = `#${receipt.receiptNumber
-    .toString()
-    .padStart(8, "0")}`;
+ const receiptNumberStr = receipt.receiptNumber?.toString() ?? "";
+const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
 
   // Format the current date
   const today = new Date();

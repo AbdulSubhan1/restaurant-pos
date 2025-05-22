@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -14,11 +14,18 @@ export default function Home() {
         <p className="text-xl text-gray-600 max-w-2xl mb-8">
           A complete point of sale solution for modern restaurants
         </p>
-        <Link href="/login">
-          <Button size="lg" className="gap-2">
-            Get Started <ArrowRight className="h-4 w-4" />
-          </Button>
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Link href="/login">
+            <Button size="lg" className="gap-2">
+              Get Started <ArrowRight className="h-4 w-4" />
+            </Button>
+          </Link>
+          <Link href="/menu">
+            <Button size="lg" variant="outline" className="gap-2">
+              View Our Menu <BookOpen className="h-4 w-4" />
+            </Button>
+          </Link>
+        </div>
       </div>
     </main>
   );

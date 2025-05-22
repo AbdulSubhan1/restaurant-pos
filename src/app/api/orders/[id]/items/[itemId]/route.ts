@@ -122,6 +122,7 @@ export async function PUT(
       const validStatuses = [
         "pending",
         "in-progress",
+        "in-process",
         "ready",
         "served",
         "cancelled",

@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { Loader2, FileDown } from "lucide-react";
+import { Loader2, FileDown, Calendar, X } from "lucide-react";
 import { Bar, Pie } from "react-chartjs-2";
 import {
   Chart as ChartJS,
@@ -32,6 +32,14 @@ import {
   Legend,
 } from "chart.js";
 import { formatCurrency } from "@/lib/utils";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { format } from "date-fns";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 // Register ChartJS components
 ChartJS.register(
@@ -72,8 +80,15 @@ type TableStatus = {
   count: number;
 };
 
+type DateRange = {
+  startDate: string;
+  endDate: string;
+};
+
 type ReportsData = {
-  period: string;
+  filterType: string;
+  period?: string;
+  dateRange?: DateRange;
   salesOverview: {
     totalOrders: number;
     totalRevenue: number;
@@ -85,17 +100,35 @@ type ReportsData = {
 };
 
 export default function ReportsPage() {
+  const [filterType, setFilterType] = useState<"period" | "dateRange">(
+    "period"
+  );
   const [period, setPeriod] = useState<string>("today");
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [data, setData] = useState<ReportsData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState<boolean>(false);
 
   const fetchReportsData = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const response = await fetch(`/api/reports?period=${period}`);
+      let url = "/api/reports";
+
+      if (filterType === "period") {
+        url = `${url}?period=${period}`;
+      } else if (filterType === "dateRange" && startDate) {
+        url = `${url}?startDate=${startDate.toISOString()}`;
+
+        if (endDate) {
+          url = `${url}&endDate=${endDate.toISOString()}`;
+        }
+      }
+
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch reports data");
       }
@@ -110,11 +143,45 @@ export default function ReportsPage() {
     } finally {
       setLoading(false);
     }
-  }, [period]);
+  }, [filterType, period, startDate, endDate]);
 
   useEffect(() => {
     fetchReportsData();
-  }, [period, fetchReportsData]);
+  }, [period, filterType, startDate, endDate, fetchReportsData]);
+
+  // Switch to period-based filtering
+  const switchToPeriodFilter = (newPeriod: string) => {
+    setFilterType("period");
+    setPeriod(newPeriod);
+    setStartDate(null);
+    setEndDate(null);
+  };
+
+  // Switch to date range filtering
+  const applyDateRangeFilter = () => {
+    if (startDate) {
+      setFilterType("dateRange");
+      setIsDatePickerOpen(false);
+    }
+  };
+
+  // Clear date range filter
+  const clearDateRangeFilter = () => {
+    setFilterType("period");
+    setStartDate(null);
+    setEndDate(null);
+    setPeriod("today");
+  };
+
+  // Format date range for display
+  const formatDateRange = () => {
+    if (!startDate) return "";
+
+    const formattedStart = format(startDate, "MMM d, yyyy");
+    const formattedEnd = endDate ? format(endDate, "MMM d, yyyy") : "Present";
+
+    return `${formattedStart} - ${formattedEnd}`;
+  };
 
   // Chart configurations
   const popularItemsChartData = {
@@ -163,16 +230,101 @@ export default function ReportsPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Reports</h1>
         <div className="flex gap-2 items-center">
-          <Select value={period} onValueChange={setPeriod}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Select period" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="week">This Week</SelectItem>
-              <SelectItem value="month">This Month</SelectItem>
-            </SelectContent>
-          </Select>
+          {filterType === "period" ? (
+            <>
+              <Select value={period} onValueChange={setPeriod}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Select period" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="week">This Week</SelectItem>
+                  <SelectItem value="month">This Month</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Popover
+                open={isDatePickerOpen}
+                onOpenChange={setIsDatePickerOpen}
+              >
+                <PopoverTrigger asChild>
+                  <Button variant="outline">
+                    Custom Range <Calendar className="ml-2 h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-4" align="end">
+                  <div className="space-y-4">
+                    <div className="grid gap-2">
+                      <div className="grid gap-1">
+                        <h4 className="font-medium">Start Date</h4>
+                        <DatePicker
+                          selected={startDate}
+                          onChange={setStartDate}
+                          selectsStart
+                          startDate={startDate}
+                          endDate={endDate}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2"
+                          dateFormat="MMMM d, yyyy"
+                          placeholderText="Select start date"
+                        />
+                      </div>
+                      <div className="grid gap-1">
+                        <h4 className="font-medium">End Date</h4>
+                        <DatePicker
+                          selected={endDate}
+                          onChange={setEndDate}
+                          selectsEnd
+                          startDate={startDate}
+                          endDate={endDate}
+                          minDate={startDate}
+                          className="w-full rounded-md border border-input bg-background px-3 py-2"
+                          dateFormat="MMMM d, yyyy"
+                          placeholderText="Select end date"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-between">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsDatePickerOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={applyDateRangeFilter}
+                        disabled={!startDate}
+                      >
+                        Apply Range
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </>
+          ) : (
+            <div className="flex items-center gap-2">
+              <div className="bg-muted px-3 py-2 rounded-md text-sm flex items-center">
+                <span>{formatDateRange()}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-5 w-5 ml-2"
+                  onClick={clearDateRangeFilter}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+              <Button
+                variant="outline"
+                onClick={() => setIsDatePickerOpen(true)}
+              >
+                Change Range
+              </Button>
+            </div>
+          )}
+
           <Button variant="outline" size="icon">
             <FileDown className="h-4 w-4" />
           </Button>
@@ -198,11 +350,13 @@ export default function ReportsPage() {
               <CardHeader className="pb-2">
                 <CardTitle>Total Orders</CardTitle>
                 <CardDescription>
-                  {period === "today"
-                    ? "Today"
-                    : period === "week"
-                    ? "This Week"
-                    : "This Month"}
+                  {filterType === "period"
+                    ? period === "today"
+                      ? "Today"
+                      : period === "week"
+                      ? "This Week"
+                      : "This Month"
+                    : "Custom Date Range"}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -216,11 +370,13 @@ export default function ReportsPage() {
               <CardHeader className="pb-2">
                 <CardTitle>Total Revenue</CardTitle>
                 <CardDescription>
-                  {period === "today"
-                    ? "Today"
-                    : period === "week"
-                    ? "This Week"
-                    : "This Month"}
+                  {filterType === "period"
+                    ? period === "today"
+                      ? "Today"
+                      : period === "week"
+                      ? "This Week"
+                      : "This Month"
+                    : "Custom Date Range"}
                 </CardDescription>
               </CardHeader>
               <CardContent>

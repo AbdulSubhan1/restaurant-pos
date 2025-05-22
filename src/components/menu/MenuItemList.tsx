@@ -2,6 +2,7 @@
 
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   Table,
   TableBody,
@@ -17,7 +18,7 @@ type MenuItem = {
   name: string;
   description: string | null;
   price: number;
-  image: string | null;
+  imageUrl: string | null;
   available: boolean;
   categoryId: number | null;
   createdAt: string;
@@ -56,6 +57,7 @@ export default function MenuItemList({
     <Table>
       <TableHeader>
         <TableRow>
+              <TableHead>Image</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Price</TableHead>
           <TableHead>Category</TableHead>
@@ -66,7 +68,24 @@ export default function MenuItemList({
       <TableBody>
         {menuItems.map((item) => (
           <TableRow key={item.id}>
+                  <TableCell>
+                         {item.imageUrl ? (
+                           <div className="relative w-12 h-12 rounded-md overflow-hidden">
+                             <Image
+                               src={item.imageUrl}
+                               alt={item.name}
+                               fill
+                               className="object-cover"
+                             />
+                           </div>
+                         ) : (
+                           <div className="w-12 h-12 bg-gray-100 rounded-md flex items-center justify-center text-gray-400">
+                             No img
+                           </div>
+                         )}
+                       </TableCell>
             <TableCell className="font-medium">
+           
               {item.name}
               {item.description && (
                 <p className="text-xs text-gray-500 mt-1 truncate max-w-xs">
