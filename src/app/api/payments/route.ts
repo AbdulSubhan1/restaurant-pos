@@ -34,12 +34,13 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      whereConditions.push(
-        and(
-          like(payments.reference, `%${search}%`)
-          // Can add more search conditions with OR if needed
-        )
-      );
+         const isNumeric = /^\d+$/.test(search); // Check if search is a number
+
+    if (isNumeric) {
+      whereConditions.push(eq(payments.orderId, Number(search)));
+    } else {
+      whereConditions.push(like(payments.reference, `%${search}%`));
+    }
     }
 
     // Handle date ranges

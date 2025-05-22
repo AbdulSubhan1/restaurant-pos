@@ -35,6 +35,7 @@ export async function GET(request: NextRequest) {
     const date = url.searchParams.get("date");
 
     // Build query conditions
+    
     let conditions = [];
 
     if (status) {
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     let whereClause = undefined;
     if (conditions.length > 0) {
       whereClause = and(...conditions);
-    }
+}
 
     const query = db
       .select({

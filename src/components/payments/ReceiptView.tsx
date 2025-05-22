@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
-
+import jsPDF from "jspdf";
 // Define the types
 type OrderItem = {
   id: number;
@@ -217,38 +217,27 @@ const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
   };
 
   // Handle downloading the receipt
-  const handleDownload = () => {
-    if (onDownload) {
-      onDownload();
-      return;
-    }
+ const handleDownload = () => {
+  if (onDownload) {
+    onDownload();
+    return;
+  }
 
-    // Generate the receipt text
-    const text = generateReceiptText();
+  const text = generateReceiptText();
 
-    // Create a blob from the text
-    const blob = new Blob([text], { type: "text/plain" });
+  const doc = new jsPDF();
+  const margin = 10;
+  const lineHeight = 7;
+  const maxLineWidth = 180; // 210mm (A4 width) - margins
 
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
+  // Split text into lines that fit the page
+  const lines = doc.splitTextToSize(text, maxLineWidth);
+  lines.forEach((line:any, i:any) => {
+    doc.text(line, margin, margin + lineHeight * (i + 1));
+  });
 
-    // Create a link element
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `receipt-${receipt.receiptNumber}.txt`;
-
-    // Append the link to the body
-    document.body.appendChild(link);
-
-    // Click the link
-    link.click();
-
-    // Remove the link
-    document.body.removeChild(link);
-
-    // Revoke the URL
-    URL.revokeObjectURL(url);
-  };
+  doc.save(`receipt-${receipt.receiptNumber}.pdf`);
+};
 
   return (
     <Card className="w-full">
