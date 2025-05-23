@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { payments } from "@/db/schema/payments";
 import { desc, eq, and, like, gte, lte } from "drizzle-orm";
+import { orders } from "@/db/schema";
 
 // GET /api/payments - Get all payments with optional filters
 export async function GET(request: NextRequest) {
@@ -33,13 +34,15 @@ export async function GET(request: NextRequest) {
       whereConditions.push(eq(payments.paymentMethod, paymentMethod));
     }
 
+ 
     if (search) {
-      whereConditions.push(
-        and(
-          like(payments.reference, `%${search}%`)
-          // Can add more search conditions with OR if needed
-        )
-      );
+         const isNumeric = /^\d+$/.test(search); // Check if search is a number
+
+    if (isNumeric) {
+      whereConditions.push(eq(payments.orderId, Number(search)));
+    } else {
+      whereConditions.push(like(payments.reference, `%${search}%`));
+    }
     }
 
     // Handle date ranges
