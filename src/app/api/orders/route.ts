@@ -5,7 +5,7 @@ import { orderItems } from "@/db/schema/order-items";
 import { tables } from "@/db/schema/tables";
 import { users } from "@/db/schema/users";
 import { menuItems } from "@/db/schema/menu-items";
-import { eq, desc, and, inArray, or } from "drizzle-orm";
+import { eq, desc, and, inArray, or,like,gte, lte } from "drizzle-orm";
 import { verifyToken } from "@/lib/auth-utils";
 
 // GET /api/orders - Get all orders with optional filtering
@@ -32,12 +32,28 @@ export async function GET(request: NextRequest) {
     const url = new URL(request.url);
     const status = url.searchParams.get("status");
     const tableId = url.searchParams.get("tableId");
-    const date = url.searchParams.get("date");
+    const dateRange = url.searchParams.get("date");
+    const searchParams = request.nextUrl.searchParams;
+       const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+    const search = searchParams.get("search");
 
+
+        const offset = (page - 1) * limit;
     // Build query conditions
     
     let conditions = [];
 
+ 
+    if (search) {
+         const isNumeric = /^\d+$/.test(search); // Check if search is a number
+
+    if (isNumeric) {
+      conditions.push(eq(orders.id, Number(search)));
+    } else {
+      conditions.push(like(tables.name, `%${search}%`));
+    }
+    }
     if (status) {
       // Handle comma-separated status values
       if (status.includes(",")) {
@@ -54,9 +70,42 @@ export async function GET(request: NextRequest) {
       conditions.push(eq(orders.tableId, parseInt(tableId)));
     }
 
-    if (date) {
-      // This requires more complex date handling, for simplicity we'll skip it for now
+     const now = new Date();
+    if (dateRange) {
+      console.log("Date Range:", dateRange);
+      switch (dateRange) {
+        case "today":
+          const today = new Date(now);
+          today.setHours(0, 0, 0, 0);
+          conditions.push(gte(orders.createdAt, today));
+          break;
+        case "yesterday":
+          const yesterday = new Date(now);
+          yesterday.setDate(yesterday.getDate() - 1);
+          yesterday.setHours(0, 0, 0, 0);
+          const yesterdayEnd = new Date(now);
+          yesterdayEnd.setDate(yesterdayEnd.getDate() - 1);
+          yesterdayEnd.setHours(23, 59, 59, 999);
+          conditions.push(
+            and(
+              gte(orders.createdAt, yesterday),
+              lte(orders.createdAt, yesterdayEnd)
+            )
+          );
+          break;
+        case "week":
+          const week = new Date(now);
+          week.setDate(week.getDate() - 7);
+          conditions.push(gte(orders.createdAt, week));
+          break;
+        case "month":
+          const month = new Date(now);
+          month.setMonth(month.getMonth() - 1);
+          conditions.push(gte(orders.createdAt, month));
+          break;
+      }
     }
+
 
     // Fetch all orders with their table information
     let whereClause = undefined;
