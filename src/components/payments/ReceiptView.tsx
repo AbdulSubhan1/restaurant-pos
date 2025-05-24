@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
-
+import jsPDF from "jspdf";
 // Define the types
 type OrderItem = {
   id: number;
@@ -122,55 +122,80 @@ const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
   // For the server name:
   const serverName = receipt.server;
 
-  // Generate the receipt for print/download
-  const generateReceiptText = () => {
-    let text = "";
-    text += "RESTAURANT POS SYSTEM\n";
-    text += "----------------------\n\n";
-    text += `Receipt: ${formattedReceiptNumber}\n`;
-    text += `Date: ${formattedDate}\n`;
-    text += `Order #: ${receipt.orderId}\n`;
+ const padRight = (text: string, length: number) => {
+  if (text.length >= length) return text;
+  return text + " ".repeat(length - text.length);
+};
 
-    if (order) {
-      text += `Table: ${order.tableName}\n`;
-    }
+const padLeft = (text: string, length: number) => {
+  if (text.length >= length) return text;
+  return " ".repeat(length - text.length) + text;
+};
 
-    text += `Server: ${serverName}\n`;
-    text += `\n`;
+// 40 char wide receipt example
+const generateReceiptText = (): string => {
+  const lines: string[] = [];
+  const width = 40;
 
-    if (order) {
-      text += "ITEMS\n";
-      text += "-----\n";
-      order.items.forEach((item) => {
-        text += `${item.quantity}x ${item.menuItemName}\n`;
-        text += `  ${formatCurrency(parseFloat(item.price) * item.quantity)}\n`;
-        if (item.notes) {
-          text += `  Note: ${item.notes}\n`;
-        }
-      });
-    }
-
-    text += "\n";
-    text += `Subtotal: ${formatCurrency(subtotal)}\n`;
-    text += `Tip: ${formatCurrency(tipTotal)}\n`;
-    text += `Total: ${formatCurrency(total)}\n\n`;
-
-    text += "PAYMENT\n";
-    text += "-------\n";
-    paymentMethods.forEach((method) => {
-      text += `${method}: ${formatCurrency(amountPaid)}\n`;
-    });
-
-    if (change > 0) {
-      text += `Change: ${formatCurrency(change)}\n`;
-    }
-
-    text += "\n\n";
-    text += "Thank you for your visit!\n";
-
-    return text;
+  // Header (centered)
+  const centerText = (text: string) => {
+    const spaces = Math.floor((width - text.length) / 2);
+    return " ".repeat(spaces) + text;
   };
 
+  lines.push(centerText("RESTAURANT POS SYSTEM"));
+  lines.push(centerText("-----------------------"));
+  lines.push(centerText(`Receipt: ${formattedReceiptNumber}`));
+  lines.push(padLeft("Date:", 0) + padLeft(formattedDate, 25));
+  lines.push(padLeft("Order #:",0) + padLeft(receipt.orderId.toString(), 22));
+  if (order) {
+    lines.push(padLeft("Table:", 0) + padLeft(order.tableName, 25));
+  }
+  lines.push(padLeft("Server:", 0) + padLeft(serverName, 25));
+  lines.push(""); // spacer
+
+  if (order) {
+    lines.push("ITEMS");
+    lines.push("-----");
+
+    order.items.forEach((item) => {
+      const itemTotal = parseFloat(item.price) * item.quantity;
+      lines.push(padRight(`${item.quantity}x ${item.menuItemName}`, 30) + padLeft(formatCurrency(itemTotal), 10));
+      if (item.notes) {
+        lines.push("  Note: " + item.notes);
+      }
+    });
+
+    lines.push(""); // spacer
+  }
+
+  // Totals
+  lines.push(padLeft("Subtotal:", 0) + padLeft(formatCurrency(subtotal), 23));
+  lines.push(padLeft("Tip:", 0) + padLeft(formatCurrency(tipTotal), 28));
+  lines.push(padLeft("Total:", 0) + padLeft(formatCurrency(total), 26));
+  lines.push(""); // spacer
+
+  lines.push("PAYMENT");
+  lines.push("-----------");
+
+  if (receipt.splitPayment && receipt.payments?.length) {
+    receipt.payments.forEach((p) => {
+      const amount = formatCurrency(parseFloat(p.amount));
+      lines.push(padRight(p.paymentMethod, 30) + padLeft(amount, 10));
+    });
+  } else {
+    lines.push(padLeft(receipt.paymentMethod, 0) + padLeft(formatCurrency(amountPaid), 28));
+  }
+
+  if (change > 0) {
+    lines.push(padRight("Change:", 30) + padLeft(formatCurrency(change), 10));
+  }
+
+  lines.push("");
+  lines.push(centerText("Thank you for your visit!"));
+
+  return lines.join("\n");
+};
   // Handle printing the receipt
   const handlePrint = () => {
     if (onPrint) {
@@ -226,28 +251,34 @@ const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
     // Generate the receipt text
     const text = generateReceiptText();
 
-    // Create a blob from the text
-    const blob = new Blob([text], { type: "text/plain" });
+    const receiptWidth = 80;
 
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
+  const doc = new jsPDF({
+    unit: "mm",
+    format: [receiptWidth, 200], // initial height 200mm, will crop later
+  });
+  
+  const margin = 5;
+  const fontSize = 10;     // font size for receipt
+  const lineHeight = fontSize * 0.35; // ~3.5mm line height
+  // const maxLineWidth = 180; // 210mm (A4 width) - margins
 
-    // Create a link element
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `receipt-${receipt.receiptNumber}.txt`;
 
-    // Append the link to the body
-    document.body.appendChild(link);
+  doc.setFont("Courier", "normal"); // monospace font for receipt alignment
+  doc.setFontSize(fontSize);
 
-    // Click the link
-    link.click();
+  // Split text lines by \n first
+  const rawLines = text.split("\n");
 
-    // Remove the link
-    document.body.removeChild(link);
+  const maxLineWidth = receiptWidth - 2 * margin;
 
-    // Revoke the URL
-    URL.revokeObjectURL(url);
+  // Split text into lines that fit the page
+  const lines = doc.splitTextToSize(text, maxLineWidth);
+  lines.forEach((line:any, i:any) => {
+    doc.text(line, margin, margin + lineHeight * (i + 1));
+  });
+
+  doc.save(`receipt-${receipt.receiptNumber}.pdf`);
   };
 
   return (
