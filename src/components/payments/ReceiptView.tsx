@@ -146,8 +146,8 @@ const generateReceiptText = (): string => {
   lines.push(centerText("RESTAURANT POS SYSTEM"));
   lines.push(centerText("-----------------------"));
   lines.push(centerText(`Receipt: ${formattedReceiptNumber}`));
-  lines.push(padLeft("Date:", 0) + padLeft(formattedDate, 25));
-  lines.push(padLeft("Order #:",0) + padLeft(receipt.orderId.toString(), 22));
+  lines.push(padLeft("Date:", 0) + padLeft(formattedDate, 27));
+  lines.push(padLeft("Order #:",0) + padLeft(receipt.orderId.toString(), 24));
   if (order) {
     lines.push(padLeft("Table:", 0) + padLeft(order.tableName, 25));
   }
@@ -160,7 +160,7 @@ const generateReceiptText = (): string => {
 
     order.items.forEach((item) => {
       const itemTotal = parseFloat(item.price) * item.quantity;
-      lines.push(padRight(`${item.quantity}x ${item.menuItemName}`, 30) + padLeft(formatCurrency(itemTotal), 10));
+      lines.push(padLeft(`${item.quantity}x ${item.menuItemName}`, 0) + padLeft(formatCurrency(itemTotal), 20));
       if (item.notes) {
         lines.push("  Note: " + item.notes);
       }
@@ -184,11 +184,11 @@ const generateReceiptText = (): string => {
       lines.push(padRight(p.paymentMethod, 30) + padLeft(amount, 10));
     });
   } else {
-    lines.push(padLeft(receipt.paymentMethod, 0) + padLeft(formatCurrency(amountPaid), 28));
+    lines.push(padLeft(receipt.paymentMethod,0)+':' + padLeft(formatCurrency(amountPaid), 27));
   }
 
   if (change > 0) {
-    lines.push(padRight("Change:", 30) + padLeft(formatCurrency(change), 10));
+    lines.push(padLeft("Change:", 0) + padLeft(formatCurrency(change), 25));
   }
 
   lines.push("");
