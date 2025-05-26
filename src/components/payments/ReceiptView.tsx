@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
 import { jsPDF } from "jspdf";
+import { use, useEffect } from "react";
 // Define the types
 type OrderItem = {
   id: number;
@@ -25,7 +26,7 @@ type OrderItem = {
   createdAt: string;
 };
 
-type Order = {
+export type Order = {
   id: number;
   tableId: number;
   tableName: string;
@@ -82,7 +83,7 @@ interface ReceiptViewProps {
     payments?: SplitPayment[];
     paymentMethods?: string[];
   };
-  order?: Order;
+  order?: Order; 
   onPrint?: () => void;
   onDownload?: () => void;
   onClose?: () => void;
@@ -95,6 +96,10 @@ export default function ReceiptView({
   onDownload,
   onClose,
 }: ReceiptViewProps) {
+  useEffect(() => {
+console.log("ReceiptView mounted with receipt:", receipt,order);
+    
+  }, [receipt, order]);
   // Format the receipt number with leading zeros
  const receiptNumberStr = receipt.receiptNumber?.toString() ?? "";
 const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
@@ -177,8 +182,8 @@ function generateReceiptPDF(receipt: any, order?: any) {
   // Items Table Header
   doc.setFont("helvetica", "bold");
   doc.text("Qty", leftMargin, y);
-  doc.text("Item", leftMargin + 20, y);
-  doc.text("Price", pageWidth - 50, y, { align: "right" });
+  doc.text("Item", leftMargin + 15, y);
+  doc.text("Price", pageWidth - 40, y, { align: "right" });
   doc.text("Total", pageWidth - 15, y, { align: "right" });
   y += 6;
   drawLine(y);
@@ -196,14 +201,15 @@ function generateReceiptPDF(receipt: any, order?: any) {
       // Qty
       doc.text(qty, leftMargin, y);
       // Name (truncate if too long)
-      const maxNameWidth = pageWidth - leftMargin - 80;
+      const maxNameWidth = pageWidth - leftMargin - 60;
       let itemName = name;
-      while (doc.getTextWidth(itemName) > maxNameWidth) {
-        itemName = itemName.slice(0, -1);
-      }
-      doc.text(itemName, leftMargin + 20, y);
+   
+    const wrappedName = doc.splitTextToSize(itemName, maxNameWidth);
+doc.text(wrappedName, leftMargin + 10, y);
+y += (wrappedName.length - 1) * 5; // Increase Y if name wraps into multiple lines
+
       // Price (per unit)
-      doc.text(formatCurrency(price), pageWidth - 50, y, { align: "right" });
+      doc.text(formatCurrency(price), pageWidth - 40, y, { align: "right" });
       // Total (price * qty)
       doc.text(formatCurrency(total), pageWidth - 15, y, { align: "right" });
 
