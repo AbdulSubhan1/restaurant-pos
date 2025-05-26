@@ -7,26 +7,7 @@ import { Plus } from "lucide-react";
 import MenuItemList from "./MenuItemList";
 import MenuItemForm from "./MenuItemForm";
 import { toast } from "sonner";
-
-// Define the MenuItem type
-type MenuItem = {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number;
-  image: string | null;
-  available: boolean; // This is the field name used in the database schema
-  categoryId: number | null;
-  createdAt: string;
-  updatedAt: string;
-  categoryName?: string;
-};
-
-// Define the Category type
-type Category = {
-  id: number;
-  name: string;
-};
+import { MenuItem, Category } from "../../types/shared"; // adjust the path
 
 export default function MenuItemsTab() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
@@ -238,14 +219,14 @@ export default function MenuItemsTab() {
             className="ml-auto"
             disabled={isAddingItem}
           >
-            <Plus className="mr-2 h-4 w-4" /> Add Menu Item
+            <Plus className="w-4 h-4 mr-2" /> Add Menu Item
           </Button>
         </CardHeader>
         <CardContent>
           {loading ? (
             <p>Loading menu items...</p>
           ) : error ? (
-            <div className="bg-red-50 p-4 rounded border border-red-200">
+            <div className="p-4 border border-red-200 rounded bg-red-50">
               <p className="text-red-600">{error}</p>
               <Button
                 variant="outline"

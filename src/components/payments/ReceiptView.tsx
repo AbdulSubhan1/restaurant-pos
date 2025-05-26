@@ -183,7 +183,7 @@ function generateReceiptPDF(receipt: any, order?: any) {
   doc.setFont("helvetica", "bold");
   doc.text("Qty", leftMargin, y);
   doc.text("Item", leftMargin + 15, y);
-  doc.text("Price", pageWidth - 40, y, { align: "right" });
+  doc.text("Price", pageWidth - 35, y, { align: "right" });
   doc.text("Total", pageWidth - 15, y, { align: "right" });
   y += 6;
   drawLine(y);
@@ -199,7 +199,7 @@ function generateReceiptPDF(receipt: any, order?: any) {
       const total = price * item.quantity;
 
       // Qty
-      doc.text(qty, leftMargin, y);
+      doc.text(qty, leftMargin +2 , y);
       // Name (truncate if too long)
       const maxNameWidth = pageWidth - leftMargin - 60;
       let itemName = name;
@@ -209,7 +209,7 @@ doc.text(wrappedName, leftMargin + 10, y);
 y += (wrappedName.length - 1) * 5; // Increase Y if name wraps into multiple lines
 
       // Price (per unit)
-      doc.text(formatCurrency(price), pageWidth - 40, y, { align: "right" });
+      doc.text(formatCurrency(price), pageWidth - 35, y, { align: "right" });
       // Total (price * qty)
       doc.text(formatCurrency(total), pageWidth - 15, y, { align: "right" });
 
@@ -273,9 +273,13 @@ y += (wrappedName.length - 1) * 5; // Increase Y if name wraps into multiple lin
     doc.text("Change:", leftMargin, y);
     doc.text(formatCurrency(parseFloat(receipt.change)), totalsX, y, { align: "right" });
     doc.setTextColor(0);
-    y += 8;
+    y += 12;
   }
-
+//   y += 6;
+//   doc.setFont("helvetica");
+//  doc.text(`Notes: ${order.notes}`, leftMargin, y);
+//   y += 8;
+  
   drawLine(y);
   y += 10;
 
