@@ -2,6 +2,8 @@
 
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { MenuItem } from "../../types/shared"
 import {
   Table,
   TableBody,
@@ -12,18 +14,7 @@ import {
 } from "@/components/ui/table";
 
 // Define the MenuItem type
-type MenuItem = {
-  id: number;
-  name: string;
-  description: string | null;
-  price: number;
-  image: string | null;
-  available: boolean;
-  categoryId: number | null;
-  createdAt: string;
-  updatedAt: string;
-  categoryName?: string;
-};
+
 
 interface MenuItemListProps {
   menuItems: MenuItem[];
@@ -38,7 +29,7 @@ export default function MenuItemList({
 }: MenuItemListProps) {
   if (menuItems.length === 0) {
     return (
-      <div className="text-center p-8 text-gray-500">
+      <div className="p-8 text-center text-gray-500">
         <p>No menu items found. Create your first menu item!</p>
       </div>
     );
@@ -56,6 +47,7 @@ export default function MenuItemList({
     <Table>
       <TableHeader>
         <TableRow>
+              <TableHead>Image</TableHead>
           <TableHead>Name</TableHead>
           <TableHead>Price</TableHead>
           <TableHead>Category</TableHead>
@@ -66,10 +58,27 @@ export default function MenuItemList({
       <TableBody>
         {menuItems.map((item) => (
           <TableRow key={item.id}>
+                  <TableCell>
+                         {item.imageUrl ? (
+                           <div className="relative w-12 h-12 overflow-hidden rounded-md">
+                             <Image
+                               src={item.imageUrl}
+                               alt={item.name}
+                               fill
+                               className="object-cover"
+                             />
+                           </div>
+                         ) : (
+                           <div className="flex items-center justify-center w-12 h-12 text-gray-400 bg-gray-100 rounded-md">
+                             No img
+                           </div>
+                         )}
+                       </TableCell>
             <TableCell className="font-medium">
+           
               {item.name}
               {item.description && (
-                <p className="text-xs text-gray-500 mt-1 truncate max-w-xs">
+                <p className="max-w-xs mt-1 text-xs text-gray-500 truncate">
                   {item.description}
                 </p>
               )}
@@ -95,7 +104,7 @@ export default function MenuItemList({
                   onClick={() => onEdit(item)}
                   title="Edit menu item"
                 >
-                  <Edit className="h-4 w-4" />
+                  <Edit className="w-4 h-4" />
                 </Button>
                 <Button
                   variant="outline"
@@ -104,7 +113,7 @@ export default function MenuItemList({
                   className="text-red-500 hover:text-red-700"
                   title="Delete menu item"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
             </TableCell>

@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 // import * as jwt from 'jsonwebtoken';
 
 // Define public routes that don't require authentication
-const publicRoutes = ["/login", "/api/auth/login"];
+const publicRoutes = ["/login", "/api/auth/login", "/menu"];
 
 // Define role-based route access
 const roleBasedRoutes: Record<string, string[]> = {
@@ -21,6 +21,7 @@ const roleBasedRoutes: Record<string, string[]> = {
     "/reports",
     "/payments",
     "/profile",
+    "/analytics",
   ],
   manager: [
     "/dashboard",

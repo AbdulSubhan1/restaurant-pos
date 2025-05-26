@@ -612,12 +612,12 @@ export default function PaymentDialog({
 
                   {paymentMethod === PAYMENT_METHODS.CASH && (
                     <div className="grid grid-cols-4 gap-2 mt-2">
-                      {quickAmounts.map((amount) => (
+                      {quickAmounts.map((amount, index) => (
                         <Button
-                          key={amount}
+                          key={`${amount}-${index}`}
                           variant="outline"
                           size="sm"
-                          onClick={() => setAmountTendered(amount.toString())}
+                          onClick={() => setAmountTendered(typeof amount == "string" ? amount :  amount.toString())}
                         >
                           {formatCurrency(amount)}
                         </Button>

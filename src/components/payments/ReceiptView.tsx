@@ -12,7 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
-
+import { jsPDF } from "jspdf";
+import { use, useEffect } from "react";
 // Define the types
 type OrderItem = {
   id: number;
@@ -25,7 +26,7 @@ type OrderItem = {
   createdAt: string;
 };
 
-type Order = {
+export type Order = {
   id: number;
   tableId: number;
   tableName: string;
@@ -82,7 +83,7 @@ interface ReceiptViewProps {
     payments?: SplitPayment[];
     paymentMethods?: string[];
   };
-  order?: Order;
+  order?: Order; 
   onPrint?: () => void;
   onDownload?: () => void;
   onClose?: () => void;
@@ -95,10 +96,13 @@ export default function ReceiptView({
   onDownload,
   onClose,
 }: ReceiptViewProps) {
+  useEffect(() => {
+console.log("ReceiptView mounted with receipt:", receipt,order);
+    
+  }, [receipt, order]);
   // Format the receipt number with leading zeros
-  const formattedReceiptNumber = `#${receipt.receiptNumber
-    .toString()
-    .padStart(8, "0")}`;
+ const receiptNumberStr = receipt.receiptNumber?.toString() ?? "";
+const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
 
   // Format the current date
   const today = new Date();
@@ -123,56 +127,172 @@ export default function ReceiptView({
   // For the server name:
   const serverName = receipt.server;
 
-  // Generate the receipt for print/download
-  const generateReceiptText = () => {
-    let text = "";
-    text += "RESTAURANT POS SYSTEM\n";
-    text += "----------------------\n\n";
-    text += `Receipt: ${formattedReceiptNumber}\n`;
-    text += `Date: ${formattedDate}\n`;
-    text += `Order #: ${receipt.orderId}\n`;
+ function formatCurrency(value: number) {
+  return "$" + value.toFixed(2);
+}
+function generateReceiptPDF(receipt: any, order?: any) {
+  const doc = new jsPDF({
+    unit: "mm",
+    format: [100,200], // slightly bigger, for invoice style
+  });
 
-    if (order) {
-      text += `Table: ${order.tableName}\n`;
-    }
+  let y = 15;
+  const leftMargin = 8;
+  const pageWidth = doc.internal.pageSize.getWidth();
 
-    text += `Server: ${serverName}\n`;
-    text += `\n`;
+  // Utility for drawing horizontal lines
+  function drawLine(yPos: number) {
+    doc.setDrawColor(150);
+    doc.setLineWidth(0.3);
+    doc.line(leftMargin, yPos, pageWidth - leftMargin, yPos);
+  }
 
-    if (order) {
-      text += "ITEMS\n";
-      text += "-----\n";
-      order.items.forEach((item) => {
-        text += `${item.quantity}x ${item.menuItemName}\n`;
-        text += `  ${formatCurrency(parseFloat(item.price) * item.quantity)}\n`;
-        if (item.notes) {
-          text += `  Note: ${item.notes}\n`;
-        }
-      });
-    }
+  // Header - Restaurant Name + Address (you can customize)
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("RESTAURANT POS SYSTEM", pageWidth / 2, y, { align: "center" });
+  y += 7;
 
-    text += "\n";
-    text += `Subtotal: ${formatCurrency(subtotal)}\n`;
-    text += `Tip: ${formatCurrency(tipTotal)}\n`;
-    text += `Total: ${formatCurrency(total)}\n\n`;
+  drawLine(y);
+  y += 5;
 
-    text += "PAYMENT\n";
-    text += "-------\n";
-    paymentMethods.forEach((method) => {
-      text += `${method}: ${formatCurrency(amountPaid)}\n`;
+  // Receipt & Order Info (left aligned)
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Receipt Info", leftMargin, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.text(`Receipt #: ${receipt.receiptNumber.toString().padStart(8, "0")}`, leftMargin, y);
+  y += 6;
+  doc.text(`Date: ${new Date(receipt.paidAt).toLocaleString()}`, leftMargin, y);
+  y += 6;
+  doc.text(`Order #: ${receipt.orderId}`, leftMargin, y);
+  y += 6;
+  if (order) {
+    doc.text(`Table: ${order.tableName}`, leftMargin, y);
+    y += 6;
+  }
+  doc.text(`Server: ${receipt.server}`, leftMargin, y);
+  y += 10;
+
+  drawLine(y);
+  y += 7;
+
+  // Items Table Header
+  doc.setFont("helvetica", "bold");
+  doc.text("Qty", leftMargin, y);
+  doc.text("Item", leftMargin + 15, y);
+  doc.text("Price", pageWidth - 35, y, { align: "right" });
+  doc.text("Total", pageWidth - 15, y, { align: "right" });
+  y += 6;
+  drawLine(y);
+  y += 5;
+
+  doc.setFont("helvetica", "normal");
+
+  if (order && order.items.length > 0) {
+    order.items.forEach((item: any) => {
+      const qty = item.quantity.toString();
+      const name = item.menuItemName;
+      const price = parseFloat(item.price);
+      const total = price * item.quantity;
+
+      // Qty
+      doc.text(qty, leftMargin +2 , y);
+      // Name (truncate if too long)
+      const maxNameWidth = pageWidth - leftMargin - 60;
+      let itemName = name;
+   
+    const wrappedName = doc.splitTextToSize(itemName, maxNameWidth);
+doc.text(wrappedName, leftMargin + 10, y);
+y += (wrappedName.length - 1) * 5; // Increase Y if name wraps into multiple lines
+
+      // Price (per unit)
+      doc.text(formatCurrency(price), pageWidth - 35, y, { align: "right" });
+      // Total (price * qty)
+      doc.text(formatCurrency(total), pageWidth - 15, y, { align: "right" });
+
+      y += 6;
+
+      if (item.notes) {
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`Note: ${item.notes}`, leftMargin + 20, y);
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+        y += 5;
+      }
     });
+  } else {
+    doc.text("No items found.", leftMargin + 20, y);
+    y += 10;
+  }
 
-    if (change > 0) {
-      text += `Change: ${formatCurrency(change)}\n`;
-    }
+  drawLine(y);
+  y += 8;
 
-    text += "\n\n";
-    text += "Thank you for your visit!\n";
+  // Totals on right side
+  const totalsX = pageWidth - 15;
+  doc.setFont("helvetica", "normal");
 
-    return text;
-  };
+  doc.text("Subtotal:", totalsX - 75, y, { align: "left" });
+  doc.text(formatCurrency(parseFloat(receipt.orderAmount)), totalsX, y, { align: "right" });
+  y += 6;
 
-  // Handle printing the receipt
+  doc.text("Tip:", totalsX - 75, y, { align: "left" });
+  doc.text(formatCurrency(parseFloat(receipt.tipAmount)), totalsX, y, { align: "right" });
+  y += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Total:", totalsX - 75, y, { align: "left" });
+  doc.text(formatCurrency(parseFloat(receipt.totalAmount)), totalsX, y, { align: "right" });
+  y += 10;
+
+  // Payment Details
+  doc.setFont("helvetica", "bold");
+  doc.text("Payment Details", leftMargin, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+
+  if (receipt.splitPayment && receipt.payments?.length) {
+    receipt.payments.forEach((p: any) => {
+      doc.text(`${p.paymentMethod}:`, leftMargin, y);
+      doc.text(formatCurrency(parseFloat(p.amount)), totalsX, y, { align: "right" });
+      y += 6;
+    });
+  } else {
+    doc.text(`${receipt.paymentMethod}:`, leftMargin, y);
+    doc.text(formatCurrency(parseFloat(receipt.amountPaid)), totalsX, y, { align: "right" });
+    y += 6;
+  }
+
+  if (receipt.change && parseFloat(receipt.change) > 0) {
+    doc.setTextColor(0, 128, 0);
+    doc.text("Change:", leftMargin, y);
+    doc.text(formatCurrency(parseFloat(receipt.change)), totalsX, y, { align: "right" });
+    doc.setTextColor(0);
+    y += 12;
+  }
+//   y += 6;
+//   doc.setFont("helvetica");
+//  doc.text(`Notes: ${order.notes}`, leftMargin, y);
+//   y += 8;
+  
+  drawLine(y);
+  y += 10;
+
+  // Footer - Thank you message
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "italic");
+  doc.text("Thank you for your visit!", pageWidth / 2, y, { align: "center" });
+
+  // Save PDF
+  doc.save(`receipt-${receipt.receiptNumber}.pdf`);
+}
+
+ // Handle printing the receipt
   const handlePrint = () => {
     if (onPrint) {
       onPrint();
@@ -219,41 +339,14 @@ export default function ReceiptView({
 
   // Handle downloading the receipt
   const handleDownload = () => {
-    if (onDownload) {
-      onDownload();
-      return;
-    }
+    
+generateReceiptPDF(receipt, order);
 
-    // Generate the receipt text
-    const text = generateReceiptText();
-
-    // Create a blob from the text
-    const blob = new Blob([text], { type: "text/plain" });
-
-    // Create a URL for the blob
-    const url = URL.createObjectURL(blob);
-
-    // Create a link element
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `receipt-${receipt.receiptNumber}.txt`;
-
-    // Append the link to the body
-    document.body.appendChild(link);
-
-    // Click the link
-    link.click();
-
-    // Remove the link
-    document.body.removeChild(link);
-
-    // Revoke the URL
-    URL.revokeObjectURL(url);
   };
 
   return (
     <Card className="w-full">
-      <CardHeader className="text-center pb-2">
+      <CardHeader className="pb-2 text-center">
         <CardTitle className="text-xl">Receipt</CardTitle>
         <CardDescription>
           {formattedReceiptNumber} • {formattedDate}
@@ -261,7 +354,7 @@ export default function ReceiptView({
       </CardHeader>
       <CardContent className="space-y-5">
         <div>
-          <h4 className="font-medium text-sm mb-2">Order Details</h4>
+          <h4 className="mb-2 text-sm font-medium">Order Details</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Receipt #:</span>
@@ -290,8 +383,8 @@ export default function ReceiptView({
 
         {order && (
           <div>
-            <h4 className="font-medium text-sm mb-2">Items</h4>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <h4 className="mb-2 text-sm font-medium">Items</h4>
+            <div className="space-y-1 overflow-y-auto max-h-40">
               {order.items.map((item) => (
                 <div key={item.id} className="text-sm">
                   <div className="flex justify-between">
@@ -303,7 +396,7 @@ export default function ReceiptView({
                     </span>
                   </div>
                   {item.notes && (
-                    <div className="text-xs text-gray-500 ml-4">
+                    <div className="ml-4 text-xs text-gray-500">
                       Note: {item.notes}
                     </div>
                   )}
@@ -335,10 +428,10 @@ export default function ReceiptView({
 
         {/* Payment Methods */}
         <div className="space-y-2">
-          <h4 className="font-medium text-sm">Payment</h4>
+          <h4 className="text-sm font-medium">Payment</h4>
           <div className="space-y-1">
             {paymentMethods.map((method, index) => (
-              <div key={index} className="text-sm space-y-1">
+              <div key={index} className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>{method}:</span>
                   <span>{formatCurrency(amountPaid)}</span>
@@ -347,7 +440,7 @@ export default function ReceiptView({
             ))}
 
             {change > 0 && (
-              <div className="flex justify-between text-sm text-green-600 font-medium">
+              <div className="flex justify-between text-sm font-medium text-green-600">
                 <span>Change:</span>
                 <span>{formatCurrency(change)}</span>
               </div>
@@ -357,7 +450,7 @@ export default function ReceiptView({
 
         <Separator />
 
-        <div className="text-sm border-t pt-4 mt-4">
+        <div className="pt-4 mt-4 text-sm border-t">
           <div className="flex justify-between">
             <span>Reference #:</span>
             <span>{receipt.receiptNumber}</span>
@@ -372,16 +465,16 @@ export default function ReceiptView({
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between flex-wrap gap-2">
+      <CardFooter className="flex flex-wrap justify-between gap-2">
         <Button onClick={handlePrint} className="flex items-center">
-          <Printer className="mr-2 h-4 w-4" /> Print Receipt
+          <Printer className="w-4 h-4 mr-2" /> Print Receipt
         </Button>
         <Button
           onClick={handleDownload}
           variant="outline"
           className="flex items-center"
         >
-          <Download className="mr-2 h-4 w-4" /> Download
+          <Download className="w-4 h-4 mr-2" /> Download
         </Button>
         {onClose && (
           <Button
@@ -393,7 +486,7 @@ export default function ReceiptView({
           </Button>
         )}
       </CardFooter>
-      <div className="text-center text-xs text-muted-foreground pt-2">
+      <div className="pt-2 text-xs text-center text-muted-foreground">
         Thank you for your visit!
       </div>
     </Card>

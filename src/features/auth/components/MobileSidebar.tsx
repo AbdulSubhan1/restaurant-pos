@@ -14,6 +14,7 @@ import {
   Users,
   X,
   Settings,
+  QrCode,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -40,9 +41,14 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       icon: <Utensils className="h-5 w-5" />,
     },
     {
-      label: "Menu",
-      href: "/menu",
+      label: "Menu Management",
+      href: "/menu-management",
       icon: <MenuSquare className="h-5 w-5" />,
+    },
+    {
+      label: "Menu QR Code",
+      href: "/menu-qr",
+      icon: <QrCode className="h-5 w-5" />,
     },
     {
       label: "Orders",
@@ -64,6 +70,12 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
     {
       label: "Reports",
       href: "/reports",
+      icon: <BarChart className="h-5 w-5" />,
+      roles: ["admin", "manager"],
+    },
+    {
+      label: "Analytics",
+      href: "/analytics",
       icon: <BarChart className="h-5 w-5" />,
       roles: ["admin", "manager"],
     },
