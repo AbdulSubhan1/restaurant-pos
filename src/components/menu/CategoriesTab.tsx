@@ -18,38 +18,36 @@ type Category = {
   updatedAt: string;
 };
 
-export default function CategoriesTab() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+// Add prop type
+type CategoriesTabProps = {
+  initialCategories: Category[];
+};
+
+export default function CategoriesTab({
+  initialCategories,
+}: CategoriesTabProps) {
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [loading, setLoading] = useState(false); // SSR: no loading on mount
   const [error, setError] = useState<string | null>(null);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
 
-  // Fetch categories on component mount
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  // Function to fetch categories from API
+  // Function to fetch categories from API (for manual refresh)
   const fetchCategories = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("/api/categories", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        credentials: "include", // Ensure cookies are sent with the request
+        credentials: "include",
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch categories");
       }
-
       setCategories(data.categories);
     } catch (err) {
       setError(
