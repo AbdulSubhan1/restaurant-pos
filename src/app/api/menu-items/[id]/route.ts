@@ -56,7 +56,6 @@ export async function GET(
       .leftJoin(categories, eq(menuItems.categoryId, categories.id))
       .where(eq(menuItems.id, id))
       .limit(1);
-
     if (!itemResult || itemResult.length === 0) {
       return NextResponse.json(
         { success: false, message: "Menu item not found" },
@@ -224,7 +223,6 @@ export async function PUT(
   }
 }
 
-// DELETE /api/menu-items/[id] - Delete a menu item
 // DELETE /api/menu-items/[id] - Soft delete a menu item
 export async function DELETE(
   request: NextRequest,

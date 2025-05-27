@@ -209,8 +209,10 @@ export async function DELETE(
     }
 
     // Delete the category
-    await db.delete(categories).where(eq(categories.id, id));
-
+ await db
+  .update(categories)
+  .set({ is_deleted: true })
+  .where(eq(categories.id, id));
     return NextResponse.json({
       success: true,
       message: "Category deleted successfully",
@@ -218,7 +220,7 @@ export async function DELETE(
   } catch (error) {
     console.error("Error deleting category:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to delete category" },
+      { success: false, message: "Used Category cannot be deleted" },
       { status: 500 }
     );
   }
