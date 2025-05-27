@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { menuItems } from "@/db/schema/menu-items";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { verifyToken } from "@/lib/auth-utils";
 import { categories } from "@/db/schema/categories";
 
@@ -225,6 +225,7 @@ export async function PUT(
 }
 
 // DELETE /api/menu-items/[id] - Delete a menu item
+// DELETE /api/menu-items/[id] - Soft delete a menu item
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -233,64 +234,41 @@ export async function DELETE(
     const token = request.cookies.get("auth_token")?.value;
 
     if (!token) {
-      return NextResponse.json(
-        { success: false, message: "Authentication required" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, message: "Authentication required" }, { status: 401 });
     }
 
     const payload = verifyToken(token);
-    if (!payload) {
-      return NextResponse.json(
-        { success: false, message: "Invalid token" },
-        { status: 401 }
-      );
-    }
-
-    // Only admin and manager can delete menu items
-    if (payload.role !== "admin" && payload.role !== "manager") {
-      return NextResponse.json(
-        { success: false, message: "Insufficient permissions" },
-        { status: 403 }
-      );
+    if (!payload || (payload.role !== "admin" && payload.role !== "manager")) {
+      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 403 });
     }
 
     const { id: idString } = await params;
     const id = parseInt(idString);
 
     if (isNaN(id)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid menu item ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ success: false, message: "Invalid ID" }, { status: 400 });
     }
 
-    // Check if menu item exists
+    // Check if item exists and is not deleted
     const existingItem = await db
       .select()
       .from(menuItems)
-      .where(eq(menuItems.id, id))
-      .limit(1);
+      .where(and(eq(menuItems.id, id), eq(menuItems.is_deleted, false)))
+
 
     if (!existingItem || existingItem.length === 0) {
-      return NextResponse.json(
-        { success: false, message: "Menu item not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, message: "Menu item not found" }, { status: 404 });
     }
 
-    // Delete the menu item
-    await db.delete(menuItems).where(eq(menuItems.id, id));
+    // Perform soft delete
+  await db
+  .update(menuItems)
+  .set({ is_deleted: true })
+  .where(eq(menuItems.id, id));
 
-    return NextResponse.json({
-      success: true,
-      message: "Menu item deleted successfully",
-    });
+    return NextResponse.json({ success: true, message: "Menu item deleted successfully" });
   } catch (error) {
     console.error("Error deleting menu item:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to delete menu item" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, message: "Failed to delete menu item" }, { status: 500 });
   }
 }
