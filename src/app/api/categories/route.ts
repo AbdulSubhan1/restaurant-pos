@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { categories } from "@/db/schema/categories";
 import { verifyToken } from "@/lib/auth-utils";
-
+import { eq } from "drizzle-orm";
 // GET /api/categories - Get all categories
 export async function GET(request: NextRequest) {
   try {
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const allCategories = await db.select().from(categories);
+    const allCategories = await db.select().from(categories).where(eq(categories.is_deleted, false));;
 
     return NextResponse.json({
       success: true,

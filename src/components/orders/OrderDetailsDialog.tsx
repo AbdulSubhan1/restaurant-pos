@@ -69,10 +69,27 @@ export default function OrderDetailsDialog({
   const subtotal = parseFloat(order.totalAmount);
 
   // Function to update order status
-  const handleStatusChange = (status: string) => {
-    if (onStatusChange) {
-      onStatusChange(order.id, status);
+  const handleStatusChange = async (status: string) => {
+     try {
+    const res = await fetch(`/api/orders/${order.id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const data = await res.json();
+
+    if (res.ok && data.success) {
+      toast.success('Order cancelled successfully');
+      if (onStatusChange) {
+        onStatusChange(order.id, 'cancelled'); // Notify parent to update
+      }
+    } else {
+      toast.error(data.message || 'Failed to cancel order');
     }
+  } catch (error) {
+    toast.error('Network error when cancelling order');
+  }
     onClose();
   };
 
@@ -132,7 +149,7 @@ export default function OrderDetailsDialog({
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle className="flex justify-between items-center">
+          <DialogTitle className="flex items-center justify-between">
             <span>Order #{order.id}</span>
             <span
               className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(
@@ -144,7 +161,7 @@ export default function OrderDetailsDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex justify-between text-sm mb-4">
+        <div className="flex justify-between mb-4 text-sm">
           <div>
             <p className="font-medium">Table</p>
             <p>{order.tableName}</p>
@@ -160,26 +177,26 @@ export default function OrderDetailsDialog({
         </div>
 
         {order.notes && (
-          <div className="bg-muted/50 p-3 rounded-md mb-4">
-            <p className="text-sm font-medium mb-1">Notes:</p>
+          <div className="p-3 mb-4 rounded-md bg-muted/50">
+            <p className="mb-1 text-sm font-medium">Notes:</p>
             <p className="text-sm">{order.notes}</p>
           </div>
         )}
 
         <div className="border rounded-md">
-          <div className="bg-muted/50 p-2 border-b">
-            <h3 className="font-medium text-sm">Order Items</h3>
+          <div className="p-2 border-b bg-muted/50">
+            <h3 className="text-sm font-medium">Order Items</h3>
           </div>
           <ul className="divide-y">
             {order.items.map((item) => (
-              <li key={item.id} className="p-3 flex justify-between">
+              <li key={item.id} className="flex justify-between p-3">
                 <div>
                   <div className="flex items-center">
                     <span className="font-medium">{item.quantity}x</span>
                     <span className="ml-2">{item.menuItemName}</span>
                   </div>
                   {item.notes && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="mt-1 text-xs text-gray-500">
                       Note: {item.notes}
                     </p>
                   )}
@@ -209,12 +226,12 @@ export default function OrderDetailsDialog({
           </ul>
         </div>
 
-        <div className="mt-4 pt-4 border-t">
+        <div className="pt-4 mt-4 border-t">
           <div className="flex justify-between">
             <span className="font-medium">Subtotal</span>
             <span>{formatCurrency(subtotal)}</span>
           </div>
-          <div className="flex justify-between font-bold mt-2">
+          <div className="flex justify-between mt-2 font-bold">
             <span>Total</span>
             <span>{formatCurrency(subtotal)}</span>
           </div>
@@ -228,7 +245,7 @@ export default function OrderDetailsDialog({
                   onClick={() => handleStatusChange("in-progress")}
                   className="w-full bg-blue-500 hover:bg-blue-600"
                 >
-                  <Clock className="mr-2 h-4 w-4" /> Start Preparation
+                  <Clock className="w-4 h-4 mr-2" /> Start Preparation
                 </Button>
               )}
 
@@ -237,7 +254,7 @@ export default function OrderDetailsDialog({
                   onClick={() => handleStatusChange("ready")}
                   className="w-full bg-green-500 hover:bg-green-600"
                 >
-                  <Check className="mr-2 h-4 w-4" /> Mark as Ready
+                  <Check className="w-4 h-4 mr-2" /> Mark as Ready
                 </Button>
               )}
 
@@ -246,7 +263,7 @@ export default function OrderDetailsDialog({
                   onClick={() => handleStatusChange("served")}
                   className="w-full bg-purple-500 hover:bg-purple-600"
                 >
-                  <Check className="mr-2 h-4 w-4" /> Mark as Served
+                  <Check className="w-4 h-4 mr-2" /> Mark as Served
                 </Button>
               )}
 
@@ -255,7 +272,7 @@ export default function OrderDetailsDialog({
                   onClick={() => handleStatusChange("completed")}
                   className="w-full bg-indigo-500 hover:bg-indigo-600"
                 >
-                  <Check className="mr-2 h-4 w-4" /> Complete Order
+                  <Check className="w-4 h-4 mr-2" /> Complete Order
                 </Button>
               )}
 
@@ -265,7 +282,7 @@ export default function OrderDetailsDialog({
                   variant="outline"
                   className="w-full mt-2"
                 >
-                  <CreditCard className="mr-2 h-4 w-4" /> Process Payment
+                  <CreditCard className="w-4 h-4 mr-2" /> Process Payment
                 </Button>
               )}
 
@@ -275,7 +292,7 @@ export default function OrderDetailsDialog({
                   onClick={() => handleStatusChange("cancelled")}
                   className="w-full text-red-500 hover:text-red-600"
                 >
-                  <X className="mr-2 h-4 w-4" /> Cancel Order
+                  <X className="w-4 h-4 mr-2" /> Cancel Order
                 </Button>
               )}
             </>

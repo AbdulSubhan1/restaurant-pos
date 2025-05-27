@@ -40,8 +40,9 @@ export async function GET(request: NextRequest) {
         updatedAt: menuItems.updatedAt,
         categoryName: categories.name,
       })
-      .from(menuItems)
-      .leftJoin(categories, eq(menuItems.categoryId, categories.id));
+       .from(menuItems)
+      .leftJoin(categories, eq(menuItems.categoryId, categories.id))
+      .where(eq(menuItems.is_deleted, false));
 
     return NextResponse.json({
       success: true,

@@ -3,7 +3,6 @@ import * as dotenv from "dotenv";
 
 dotenv.config();
 
-// Parse the connection string
 const connectionString = process.env.DATABASE_URL!;
 const url = new URL(connectionString);
 
@@ -16,6 +15,7 @@ export default {
     port: parseInt(url.port),
     user: url.username,
     password: url.password,
-    database: url.pathname.slice(1), // Remove the leading '/'
+    database: url.pathname.slice(1),
+    ssl: false, // explicitly disable SSL
   },
 } satisfies Config;
