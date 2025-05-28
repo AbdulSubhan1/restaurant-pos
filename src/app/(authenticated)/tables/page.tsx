@@ -1,41 +1,49 @@
-"use client";
+import { getPaginatedTables } from "@/server/tableService";
+import TablesViewWrapper from "@/features/tables/components/TablesViewWrapper";
+import { Metadata } from "next";
 
-import { useState } from "react";
-import { TablesList } from "@/features/tables/components/TablesList";
-import { TableLayout } from "@/features/tables/components/TableLayout";
-import { Button } from "@/components/ui/button";
-import { LayoutGrid, List } from "lucide-react";
+export const metadata: Metadata = {
+  title: "Table Management - Restaurant POS",
+  description: "Manage restaurant tables",
+};
 
-export default function TablesPage() {
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function TablesPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const page = parseInt(
+    Array.isArray(params?.page) ? params.page[0] : params?.page || "1"
+  );
+  const limit = parseInt(
+    Array.isArray(params?.limit) ? params.limit[0] : params?.limit || "10"
+  );
+
+  const paginatedTables = await getPaginatedTables(page, limit);
+  const mappedTables = paginatedTables.items.map((table) => ({
+    ...table,
+    createdAt:
+      typeof table.createdAt === "string"
+        ? table.createdAt
+        : table.createdAt.toISOString(),
+    updatedAt:
+      typeof table.updatedAt === "string"
+        ? table.updatedAt
+        : table.updatedAt.toISOString(),
+  }));
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Table Management</h1>
-        <div className="flex space-x-2">
-          <Button
-            variant={viewMode === "grid" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("grid")}
-            className="flex items-center gap-1"
-          >
-            <LayoutGrid className="h-4 w-4" />
-            <span className="hidden sm:inline">Grid View</span>
-          </Button>
-          <Button
-            variant={viewMode === "list" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setViewMode("list")}
-            className="flex items-center gap-1"
-          >
-            <List className="h-4 w-4" />
-            <span className="hidden sm:inline">List View</span>
-          </Button>
-        </div>
-      </div>
-
-      {viewMode === "grid" ? <TableLayout /> : <TablesList />}
+      <TablesViewWrapper
+        initialTables={mappedTables}
+        pagination={{
+          total: paginatedTables.total,
+          page: paginatedTables.page,
+          limit: paginatedTables.limit,
+          totalPages: paginatedTables.totalPages,
+        }}
+      />
     </div>
   );
 }
