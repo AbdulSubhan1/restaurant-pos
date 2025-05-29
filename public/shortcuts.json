@@ -139,6 +139,24 @@
             "description": "Prints the current bill or receipt."
         },
         {
+            "action": "openFirstReceipt",
+            "keys": [
+                "Control",
+                "Enter"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "openFirstReceipt",
+            "keys": [
+                "Escape",
+                "Enter"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
             "action": "downLoadBill",
             "keys": [
                 "Control",

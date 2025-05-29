@@ -96,6 +96,9 @@ export default function PaymentsPage() {
         seacrhBarRef.current?.focus()
       // Implement search dialog logic
     },
+    openFirstReceipt: () => {
+      viewReceipt(payments[0])
+    },
     // Add a handler for 'Esc' to go back from payment screen
     closeModal: () => {
       console.log('Action: Closing Payment Screen');
