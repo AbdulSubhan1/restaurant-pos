@@ -17,7 +17,7 @@ export default async function TablesPage({ searchParams }: PageProps) {
     Array.isArray(params?.page) ? params.page[0] : params?.page || "1"
   );
   const limit = parseInt(
-    Array.isArray(params?.limit) ? params.limit[0] : params?.limit || "10"
+    Array.isArray(params?.limit) ? params.limit[0] : params?.limit || "5"
   );
 
   const paginatedTables = await getPaginatedTables(page, limit);
@@ -36,6 +36,7 @@ export default async function TablesPage({ searchParams }: PageProps) {
   return (
     <div className="p-6">
       <TablesViewWrapper
+        key={page}
         initialTables={mappedTables}
         pagination={{
           total: paginatedTables.total,

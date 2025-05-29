@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -60,6 +60,63 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const fetchTables = async () => {
+    try {
+      const url = new URL("/api/tables", window.location.origin);
+      url.searchParams.append('page', pagination.page.toString());
+      url.searchParams.append('limit', pagination.limit.toString());
+
+      const response = await fetch(url.toString(), {
+        cache: 'no-store',
+        next: { revalidate: 0 },
+      });
+      const data = await response.json();
+      console.log('data', response);
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch tables");
+      }
+
+      setTables(data.tables);
+    } catch (error) {
+      console.error("Error fetching tables:", error);
+      toast.error("Failed to load tables");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const toggleTableStatus = async (tableId: number, currentStatus: string) => {
+    const newStatus = currentStatus === "available" ? "occupied" : "available";
+
+    console.log(`Updating table ${tableId} ${currentStatus} status to ${newStatus}`);
+
+    try {
+      const response = await fetch(`/api/tables/${tableId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || "Failed to update table status");
+      }
+
+      // Refresh tables after update
+      fetchTables();
+      toast.success(`Table status updated to ${newStatus}`);
+    } catch (error) {
+      console.error("Error updating table status:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update table status"
+      );
+    }
+  }
+
   // Pagination controls
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -74,16 +131,17 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
     router.push(`?${params.toString()}`);
   };
 
-  const getStatusBadge = (id: number, status: string) => {
-    switch (status.toLowerCase()) {
+  const getStatusBadge = (table: UITableType, status: string) => {
+    console.log(table.id, status);
+    switch (table.status.toLowerCase()) {
       case "available":
-        return <Badge className="bg-green-500">Available</Badge>;
+        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-green-500 cursor-pointer">Available</Badge>;
       case "occupied":
-        return <Badge className="bg-red-500">Occupied</Badge>;
+        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-red-500 cursor-pointer">Occupied</Badge>;
       case "reserved":
-        return <Badge className="bg-yellow-500">Reserved</Badge>;
+        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-yellow-500 cursor-pointer">Reserved</Badge>;
       case "maintenance":
-        return <Badge className="bg-gray-500">Maintenance</Badge>;
+        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-gray-500 cursor-pointer">Maintenance</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -155,7 +213,7 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
                   <TableCell className="font-medium">{table.name}</TableCell>
                   <TableCell>{table.capacity}</TableCell>
                   <TableCell>
-                    {getStatusBadge(table.id, table.status)}
+                    {getStatusBadge(table, table.status)}
                   </TableCell>
                   <TableCell>{table.notes || "-"}</TableCell>
                   <TableCell className="text-right">
