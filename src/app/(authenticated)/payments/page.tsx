@@ -71,7 +71,7 @@ type Receipt = {
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<Receipt | null>(null);
@@ -88,9 +88,7 @@ export default function PaymentsPage() {
 
   // Function to fetch payments
   const fetchPayments = useCallback(async () => {
-    setLoading(true);
     setError(null);
-
     try {
       // Build query parameters
       let queryParams = `?page=${page}&limit=${pageSize}`;
@@ -140,6 +138,10 @@ export default function PaymentsPage() {
     fetchPayments();
   }, [fetchPayments]);
 
+  useEffect(() => {
+    setLoading(true);
+    fetchPayments();
+  },[])
   // Handle search
   const handleSearch = () => {
     setPage(1); // Reset to first page when searching
@@ -308,15 +310,14 @@ export default function PaymentsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          payment.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : payment.status === "refunded"
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${payment.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : payment.status === "refunded"
                             ? "bg-orange-100 text-orange-800"
                             : payment.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
+                              ? "bg-red-100 text-red-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
                       >
                         {payment.status.charAt(0).toUpperCase() +
                           payment.status.slice(1)}
