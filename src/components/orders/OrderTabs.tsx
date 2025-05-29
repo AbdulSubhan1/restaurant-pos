@@ -9,9 +9,9 @@ export default function OrderTabs() {
   return (
     <Tabs defaultValue="active" className="w-full">
       <TabsList className="mb-6">
-        <TabsTrigger value="active">Active Orders</TabsTrigger>
-        <TabsTrigger value="history">Order History</TabsTrigger>
-        <TabsTrigger value="kitchen">Kitchen Display</TabsTrigger>
+        <TabsTrigger tabIndex={1} value="active">Active Orders</TabsTrigger>
+        <TabsTrigger tabIndex={1} value="history">Order History</TabsTrigger>
+        <TabsTrigger tabIndex={1} value="kitchen">Kitchen Display</TabsTrigger>
       </TabsList>
 
       <TabsContent value="active">
