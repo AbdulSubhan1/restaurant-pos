@@ -1,0 +1,161 @@
+{
+    "global": [
+        {
+            "action": "newOrder",
+            "keys": [
+                "Control",
+                "Enter"
+            ],
+            "display": "Ctrl++",
+            "description": "Opens a new order screen."
+        },
+        {
+            "action": "newOrder",
+            "keys": [
+                "F2"
+            ],
+            "display": "F2",
+            "description": "Opens a new order screen."
+        },
+        {
+            "action": "searchItems",
+            "keys": [
+                "Control",
+                "f"
+            ],
+            "display": "Ctrl+F",
+            "description": "Opens the search dialog for menu items or customers."
+        },
+        {
+            "action": "printBill",
+            "keys": [
+                "Control",
+                "p"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "finalizeSale",
+            "keys": [
+                "F10"
+            ],
+            "display": "F10",
+            "description": "Proceeds to finalize the sale and take payment."
+        },
+        {
+            "action": "finalizeSale",
+            "keys": [
+                "Control",
+                "Enter"
+            ],
+            "display": "Ctrl+Enter",
+            "description": "Proceeds to finalize the sale and take payment."
+        }
+    ],
+    "orderEntryScreen": [
+        {
+            "action": "navigateUp",
+            "keys": [
+                "ArrowUp"
+            ],
+            "display": "Arrow Up",
+            "description": "Navigates up in a list or menu."
+        },
+        {
+            "action": "navigateDown",
+            "keys": [
+                "ArrowDown"
+            ],
+            "display": "Arrow Down",
+            "description": "Navigates down in a list or menu."
+        },
+        {
+            "action": "navigateLeft",
+            "keys": [
+                "ArrowLeft"
+            ],
+            "display": "Arrow Left",
+            "description": "Navigates left in a list or menu."
+        },
+        {
+            "action": "navigateRight",
+            "keys": [
+                "ArrowRight"
+            ],
+            "display": "Arrow Right",
+            "description": "Navigates right in a list or menu."
+        },
+        {
+            "action": "addItemToOrder",
+            "keys": [
+                "Enter"
+            ],
+            "display": "Enter",
+            "description": "Adds the selected menu item to the current order."
+        },
+        {
+            "action": "increaseQuantity",
+            "keys": [
+                "+"
+            ],
+            "display": "+",
+            "description": "Increases the quantity of the currently selected item in the order."
+        },
+        {
+            "action": "decreaseQuantity",
+            "keys": [
+                "-"
+            ],
+            "display": "-",
+            "description": "Decreases the quantity of the currently selected item in the order."
+        },
+        {
+            "action": "removeItem",
+            "keys": [
+                "Delete"
+            ],
+            "display": "Del",
+            "description": "Removes the selected item from the order."
+        },
+        {
+            "action": "saveOrder",
+            "keys": [
+                "Control",
+                "s"
+            ],
+            "display": "Ctrl+S",
+            "description": "Saves the current order without immediate payment."
+        }
+    ],
+    "paymentScreen": [
+        {
+            "action": "printBill",
+            "keys": [
+                "Control",
+                "p"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "downLoadBill",
+            "keys": [
+                "Control",
+                "d"
+            ],
+            "display": "Ctrl+d",
+            "description": "Downloads the current bill or receipt."
+        },
+        {
+            "action": "searchItems",
+            "keys": [
+                "Control",
+                "f"
+            ],
+            "display": "Ctrl+f",
+            "description": "Opens the search dialog for menu items or customers."
+        }
+        
+    ]
+}

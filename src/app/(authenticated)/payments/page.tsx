@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import ReceiptView from "@/components/payments/ReceiptView";
+import useKeyboardShortcuts from "@/config/short-cut/hook";
 
 // Define the types
 type Payment = {
@@ -79,12 +80,32 @@ export default function PaymentsPage() {
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  let seacrhBarRef = useRef<HTMLInputElement>(null)
   const pageSize = 10;
 
   // Filters
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [dateRange, setDateRange] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
+
+  // short cut to open receipt in a new tab
+  const paymentScreenActionHandlers: Record<string, () => void> = {
+
+    searchItems: () => {
+      console.log('Action: Opening Search Dialog (Payment Screen)');
+        seacrhBarRef.current?.focus()
+      // Implement search dialog logic
+    },
+    // Add a handler for 'Esc' to go back from payment screen
+    closeModal: () => {
+      console.log('Action: Closing Payment Screen');
+      setShowReceipt(false)
+      // setPaymentAmount(0);
+      // setPaymentMethod(null);
+    },
+  };
+
+  useKeyboardShortcuts('paymentScreen', paymentScreenActionHandlers)
 
   // Function to fetch payments
   const fetchPayments = useCallback(async () => {
@@ -141,7 +162,7 @@ export default function PaymentsPage() {
   useEffect(() => {
     setLoading(true);
     fetchPayments();
-  },[])
+  }, [])
   // Handle search
   const handleSearch = () => {
     setPage(1); // Reset to first page when searching
@@ -208,6 +229,7 @@ export default function PaymentsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
+            ref={seacrhBarRef}
           />
           <Button onClick={handleSearch} variant="outline">
             <Search className="h-4 w-4" />

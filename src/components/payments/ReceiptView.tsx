@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
 import jsPDF from "jspdf";
+import useKeyboardShortcuts from "@/config/short-cut/hook";
 // Define the types
 type OrderItem = {
   id: number;
@@ -282,6 +283,12 @@ const generateReceiptText = (): string => {
   doc.save(`receipt-${receipt.receiptNumber}.pdf`);
 };
 
+  const paymentScreenActionHandlers: Record<string, () => void> = {
+   printBill: () => handlePrint(),
+   downLoadBill: () => handleDownload(),
+  };
+
+  useKeyboardShortcuts('paymentScreen', paymentScreenActionHandlers);
   return (
     <Card className="w-full">
       <CardHeader className="text-center pb-2">
