@@ -61,6 +61,9 @@ export const useKeyboardShortcuts = (
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (isLoading || error || !shortcutsConfig) return;
 
+    if (event.ctrlKey && event.key.toLowerCase() === 't') {
+      event.preventDefault();
+    }
     // Get the shortcuts for the current scope
     const currentScopeShortcuts: Shortcut[] | undefined = shortcutsConfig[scope];
     if (!currentScopeShortcuts) return;
@@ -96,8 +99,8 @@ export const useKeyboardShortcuts = (
         else if (primaryKey === '-' && event.key !== '-') match = false;
         // For other keys, a direct comparison is usually fine
         else if (event.key.toLowerCase() !== primaryKey.toLowerCase() && event.code !== primaryKey) {
-             // event.code is useful for F-keys (e.g., "F2") and some other non-character keys
-            match = false;
+          // event.code is useful for F-keys (e.g., "F2") and some other non-character keys
+          match = false;
         }
       } else if (primaryKey && !match) {
         // If primaryKey exists but modifiers didn't match, no need to check primaryKey
@@ -106,7 +109,7 @@ export const useKeyboardShortcuts = (
         // This case is unlikely for typical shortcuts but good for robustness.
         // If only modifiers are required, ensure no other keys are pressed.
         if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.shiftKey && !event.metaKey) {
-            match = false; // A character key was pressed without being specified
+          match = false; // A character key was pressed without being specified
         }
       }
 

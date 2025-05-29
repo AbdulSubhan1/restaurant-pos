@@ -26,23 +26,24 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-    const globalActionHandlers: Record<string, () => void> = {
-    newOrder: () => {
-      console.log('Action: Opening New Order Screen (Global)');
-      // Implement your actual navigation or modal opening logic here
-      // For example: router.push('/new-order');
+  const globalActionHandlers: Record<string, () => void> = {
+    "goToTables": () => {
+      window.location.href = "/tables";
     },
-    searchItems: () => {
-      console.log('Action: Opening Search Dialog (Global)');
-      // Implement search dialog logic
+    "goToOrders": () => {
+      window.location.href = "/orders";
     },
-    printBill: () => {
-      console.log('Action: Printing Bill (Global)');
-      // Implement print logic
+    "goToMenu": () => {
+      window.location.href = "/menu";
     },
-    finalizeSale: () => {
-      console.log('Action: Finalizing Sale (Global)');
-      // Implement payment process initiation
+    "goToUsers": () => {
+      window.location.href = "/users";
+    },
+    "goToKitchen": () => {
+      window.location.href = "/kitchen";
+    },
+    "goToPayments": () => {
+      window.location.href = "/payments";
     },
   };
 
