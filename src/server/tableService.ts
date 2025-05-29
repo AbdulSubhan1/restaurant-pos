@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { tables } from "@/db/schema/tables";
 import { unstable_cache } from "next/cache";
-import { eq } from "drizzle-orm";
+import { count, eq } from "drizzle-orm";
 
 export const getAllTables = unstable_cache(
   async () =>
@@ -14,8 +14,7 @@ export const getAllTables = unstable_cache(
   { revalidate: 60 }
 );
 
-export const getPaginatedTables = async  (page: number = 1, limit: number = 10) => {
-  console.log('get Again')
+export const getPaginatedTables = async (page: number = 1, limit: number = 10) => {
   const offset = (page - 1) * limit;
   const [items, totalResult] = await Promise.all([
     db
@@ -26,7 +25,7 @@ export const getPaginatedTables = async  (page: number = 1, limit: number = 10) 
       .limit(limit)
       .offset(offset),
     db
-      .select({ count: tables.id })
+      .select({ count: count(tables.id) })
       .from(tables)
       .where(eq(tables.active, true)),
   ]);
