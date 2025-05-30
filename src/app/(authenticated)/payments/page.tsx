@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import ReceiptView from "@/components/payments/ReceiptView";
+import ReceiptView, { Order } from "@/components/payments/ReceiptView";
 
 // Define the types
 type Payment = {
@@ -71,6 +71,7 @@ type Receipt = {
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [order, setOrder] = useState<Order | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -134,6 +135,44 @@ export default function PaymentsPage() {
       setLoading(false);
     }
   }, [page, pageSize, paymentMethod, dateRange, searchTerm, payments.length]);
+  
+  const fetchOrder = useCallback(async (id:string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Build query parameters
+      let queryParams = `${id}`;
+      const response = await fetch(`/api/orders/${queryParams}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch order");
+      }
+
+      
+      console.log("Fetched order data:", data);
+      setOrder(data.order || undefined);
+
+      // Calculate total pages (in a real app, this would come from the API)
+      setTotalPages(Math.ceil((data.total || payments.length) / pageSize));
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+      console.error("Error fetching payments:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, pageSize, paymentMethod, dateRange, searchTerm, payments.length]);
 
   // Fetch payments on component mount and when filters change
   useEffect(() => {
@@ -166,7 +205,8 @@ export default function PaymentsPage() {
         payments: [], // Initialize as empty SplitPayment array
         paymentMethods: [payment.paymentMethod],
       };
-
+      fetchOrder(payment.orderId.toString());
+      console.log("Generated receipt:", receipt);
       setReceiptData(receipt);
       setShowReceipt(true);
     } catch (error) {
@@ -174,7 +214,10 @@ export default function PaymentsPage() {
       toast.error("Failed to load receipt");
     }
   };
+const FetchOrder = async (orderId: number) => {
 
+
+}
   // Get a friendly payment method display
   const getPaymentMethodDisplay = (method: string) => {
     switch (method) {
@@ -194,12 +237,12 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="container py-6 mx-auto space-y-6">
+      <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Payment History</h1>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
+      <div className="flex flex-col gap-4 mb-6 md:flex-row">
         <div className="flex flex-1 gap-2">
           <Input
             placeholder="Search by reference or order ID"
@@ -208,7 +251,7 @@ export default function PaymentsPage() {
             className="max-w-sm"
           />
           <Button onClick={handleSearch} variant="outline">
-            <Search className="h-4 w-4" />
+            <Search className="w-4 h-4" />
           </Button>
         </div>
 
@@ -242,10 +285,10 @@ export default function PaymentsPage() {
         </div>
       </div>
 
-      {loading && <p className="text-center py-4">Loading payments...</p>}
+      {loading && <p className="py-4 text-center">Loading payments...</p>}
 
       {error && (
-        <div className="bg-red-50 p-4 rounded border border-red-200 mb-6">
+        <div className="p-4 mb-6 border border-red-200 rounded bg-red-50">
           <p className="text-red-600">{error}</p>
           <Button variant="outline" onClick={fetchPayments} className="mt-2">
             Try Again
@@ -264,33 +307,33 @@ export default function PaymentsPage() {
       )}
 
       {payments.length > 0 && (
-        <div className="rounded-md border">
+        <div className="border rounded-md">
           <div className="overflow-x-auto">
             <table className="w-full table-auto">
               <thead>
                 <tr className="bg-muted/50">
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Reference #
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Date
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Order #
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Method
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Amount
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Server
                   </th>
-                  <th className="px-4 py-3 text-left text-sm font-medium">
+                  <th className="px-4 py-3 text-sm font-medium text-left">
                     Actions
                   </th>
                 </tr>
@@ -335,7 +378,7 @@ export default function PaymentsPage() {
                         onClick={() => viewReceipt(payment)}
                         className="mr-2"
                       >
-                        <Receipt className="h-4 w-4 mr-1" /> Receipt
+                        <Receipt className="w-4 h-4 mr-1" /> Receipt
                       </Button>
                     </td>
                   </tr>
@@ -348,14 +391,14 @@ export default function PaymentsPage() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-4">
+        <div className="flex items-center justify-center gap-2 mt-4">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setPage(Math.max(1, page - 1))}
             disabled={page === 1}
           >
-            <ChevronLeft className="h-4 w-4" />
+            <ChevronLeft className="w-4 h-4" />
           </Button>
           <span className="text-sm">
             Page {page} of {totalPages}
@@ -366,7 +409,7 @@ export default function PaymentsPage() {
             onClick={() => setPage(Math.min(totalPages, page + 1))}
             disabled={page === totalPages}
           >
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
       )}
@@ -380,6 +423,7 @@ export default function PaymentsPage() {
             </DialogHeader>
             <ReceiptView
               receipt={receiptData}
+              order={order}
               onClose={() => setShowReceipt(false)}
             />
           </DialogContent>

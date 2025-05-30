@@ -12,7 +12,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
-import jsPDF from "jspdf";
+import { useEffect } from "react";
+
 // Define the types
 type OrderItem = {
   id: number;
@@ -25,7 +26,7 @@ type OrderItem = {
   createdAt: string;
 };
 
-type Order = {
+export type Order = {
   id: number;
   tableId: number;
   tableName: string;
@@ -82,7 +83,7 @@ interface ReceiptViewProps {
     payments?: SplitPayment[];
     paymentMethods?: string[];
   };
-  order?: Order;
+  order?: Order; 
   onPrint?: () => void;
   onDownload?: () => void;
   onClose?: () => void;
@@ -95,6 +96,10 @@ export default function ReceiptView({
   onDownload,
   onClose,
 }: ReceiptViewProps) {
+  useEffect(() => {
+console.log("ReceiptView mounted with receipt:", receipt,order);
+    
+  }, [receipt, order]);
   // Format the receipt number with leading zeros
  const receiptNumberStr = receipt.receiptNumber?.toString() ?? "";
 const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
@@ -122,83 +127,172 @@ const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
   // For the server name:
   const serverName = receipt.server;
 
-const padRight = (text: string, length: number) => {
-  if (text.length >= length) return text;
-  return text + " ".repeat(length - text.length);
-};
+ function formatCurrency(value: number) {
+  return "$" + value.toFixed(2);
+}
+function generateReceiptPDF(receipt: any, order?: any) {
+  const doc = new jsPDF({
+    unit: "mm",
+    format: [100,200], // slightly bigger, for invoice style
+  });
 
-const padLeft = (text: string, length: number) => {
-  if (text.length >= length) return text;
-  return " ".repeat(length - text.length) + text;
-};
+  let y = 15;
+  const leftMargin = 8;
+  const pageWidth = doc.internal.pageSize.getWidth();
 
-// 40 char wide receipt example
-const generateReceiptText = (): string => {
-  const lines: string[] = [];
-  const width = 40;
-
-  // Header (centered)
-  const centerText = (text: string) => {
-    const spaces = Math.floor((width - text.length) / 2);
-    return " ".repeat(spaces) + text;
-  };
-
-  lines.push(centerText("RESTAURANT POS SYSTEM"));
-  lines.push(centerText("-----------------------"));
-  lines.push(centerText(`Receipt: ${formattedReceiptNumber}`));
-  lines.push(padLeft("Date:", 0) + padLeft(formattedDate, 25));
-  lines.push(padLeft("Order #:",0) + padLeft(receipt.orderId.toString(), 22));
-  if (order) {
-    lines.push(padLeft("Table:", 0) + padLeft(order.tableName, 25));
+  // Utility for drawing horizontal lines
+  function drawLine(yPos: number) {
+    doc.setDrawColor(150);
+    doc.setLineWidth(0.3);
+    doc.line(leftMargin, yPos, pageWidth - leftMargin, yPos);
   }
-  lines.push(padLeft("Server:", 0) + padLeft(serverName, 25));
-  lines.push(""); // spacer
 
+  // Header - Restaurant Name + Address (you can customize)
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("RESTAURANT POS SYSTEM", pageWidth / 2, y, { align: "center" });
+  y += 7;
+
+  drawLine(y);
+  y += 5;
+
+  // Receipt & Order Info (left aligned)
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
+  doc.text("Receipt Info", leftMargin, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
+  doc.text(`Receipt #: ${receipt.receiptNumber.toString().padStart(8, "0")}`, leftMargin, y);
+  y += 6;
+  doc.text(`Date: ${new Date(receipt.paidAt).toLocaleString()}`, leftMargin, y);
+  y += 6;
+  doc.text(`Order #: ${receipt.orderId}`, leftMargin, y);
+  y += 6;
   if (order) {
-    lines.push("ITEMS");
-    lines.push("-----");
+    doc.text(`Table: ${order.tableName}`, leftMargin, y);
+    y += 6;
+  }
+  doc.text(`Server: ${receipt.server}`, leftMargin, y);
+  y += 10;
 
-    order.items.forEach((item) => {
-      const itemTotal = parseFloat(item.price) * item.quantity;
-      lines.push(padRight(`${item.quantity}x ${item.menuItemName}`, 30) + padLeft(formatCurrency(itemTotal), 10));
+  drawLine(y);
+  y += 7;
+
+  // Items Table Header
+  doc.setFont("helvetica", "bold");
+  doc.text("Qty", leftMargin, y);
+  doc.text("Item", leftMargin + 15, y);
+  doc.text("Price", pageWidth - 35, y, { align: "right" });
+  doc.text("Total", pageWidth - 15, y, { align: "right" });
+  y += 6;
+  drawLine(y);
+  y += 5;
+
+  doc.setFont("helvetica", "normal");
+
+  if (order && order.items.length > 0) {
+    order.items.forEach((item: any) => {
+      const qty = item.quantity.toString();
+      const name = item.menuItemName;
+      const price = parseFloat(item.price);
+      const total = price * item.quantity;
+
+      // Qty
+      doc.text(qty, leftMargin +2 , y);
+      // Name (truncate if too long)
+      const maxNameWidth = pageWidth - leftMargin - 60;
+      let itemName = name;
+   
+    const wrappedName = doc.splitTextToSize(itemName, maxNameWidth);
+doc.text(wrappedName, leftMargin + 10, y);
+y += (wrappedName.length - 1) * 5; // Increase Y if name wraps into multiple lines
+
+      // Price (per unit)
+      doc.text(formatCurrency(price), pageWidth - 35, y, { align: "right" });
+      // Total (price * qty)
+      doc.text(formatCurrency(total), pageWidth - 15, y, { align: "right" });
+
+      y += 6;
+
       if (item.notes) {
-        lines.push("  Note: " + item.notes);
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(`Note: ${item.notes}`, leftMargin + 20, y);
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+        y += 5;
       }
     });
-
-    lines.push(""); // spacer
+  } else {
+    doc.text("No items found.", leftMargin + 20, y);
+    y += 10;
   }
 
-  // Totals
-  lines.push(padLeft("Subtotal:", 0) + padLeft(formatCurrency(subtotal), 23));
-  lines.push(padLeft("Tip:", 0) + padLeft(formatCurrency(tipTotal), 28));
-  lines.push(padLeft("Total:", 0) + padLeft(formatCurrency(total), 26));
-  lines.push(""); // spacer
+  drawLine(y);
+  y += 8;
 
-  lines.push("PAYMENT");
-  lines.push("-----------");
+  // Totals on right side
+  const totalsX = pageWidth - 15;
+  doc.setFont("helvetica", "normal");
+
+  doc.text("Subtotal:", totalsX - 75, y, { align: "left" });
+  doc.text(formatCurrency(parseFloat(receipt.orderAmount)), totalsX, y, { align: "right" });
+  y += 6;
+
+  doc.text("Tip:", totalsX - 75, y, { align: "left" });
+  doc.text(formatCurrency(parseFloat(receipt.tipAmount)), totalsX, y, { align: "right" });
+  y += 6;
+
+  doc.setFont("helvetica", "bold");
+  doc.text("Total:", totalsX - 75, y, { align: "left" });
+  doc.text(formatCurrency(parseFloat(receipt.totalAmount)), totalsX, y, { align: "right" });
+  y += 10;
+
+  // Payment Details
+  doc.setFont("helvetica", "bold");
+  doc.text("Payment Details", leftMargin, y);
+  y += 7;
+
+  doc.setFont("helvetica", "normal");
 
   if (receipt.splitPayment && receipt.payments?.length) {
-    receipt.payments.forEach((p) => {
-      const amount = formatCurrency(parseFloat(p.amount));
-      lines.push(padRight(p.paymentMethod, 30) + padLeft(amount, 10));
+    receipt.payments.forEach((p: any) => {
+      doc.text(`${p.paymentMethod}:`, leftMargin, y);
+      doc.text(formatCurrency(parseFloat(p.amount)), totalsX, y, { align: "right" });
+      y += 6;
     });
   } else {
-    lines.push(padLeft(receipt.paymentMethod, 0) + padLeft(formatCurrency(amountPaid), 28));
+    doc.text(`${receipt.paymentMethod}:`, leftMargin, y);
+    doc.text(formatCurrency(parseFloat(receipt.amountPaid)), totalsX, y, { align: "right" });
+    y += 6;
   }
 
-  if (change > 0) {
-    lines.push(padRight("Change:", 30) + padLeft(formatCurrency(change), 10));
+  if (receipt.change && parseFloat(receipt.change) > 0) {
+    doc.setTextColor(0, 128, 0);
+    doc.text("Change:", leftMargin, y);
+    doc.text(formatCurrency(parseFloat(receipt.change)), totalsX, y, { align: "right" });
+    doc.setTextColor(0);
+    y += 12;
   }
+//   y += 6;
+//   doc.setFont("helvetica");
+//  doc.text(`Notes: ${order.notes}`, leftMargin, y);
+//   y += 8;
+  
+  drawLine(y);
+  y += 10;
 
-  lines.push("");
-  lines.push(centerText("Thank you for your visit!"));
+  // Footer - Thank you message
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "italic");
+  doc.text("Thank you for your visit!", pageWidth / 2, y, { align: "center" });
 
-  return lines.join("\n");
-};
+  // Save PDF
+  doc.save(`receipt-${receipt.receiptNumber}.pdf`);
+}
 
-
-  // Handle printing the receipt
+ // Handle printing the receipt
   const handlePrint = () => {
     if (onPrint) {
       onPrint();
@@ -244,47 +338,15 @@ const generateReceiptText = (): string => {
   };
 
   // Handle downloading the receipt
- const handleDownload = () => {
-  if (onDownload) {
-    onDownload();
-    return;
-  }
+  const handleDownload = () => {
+    
+generateReceiptPDF(receipt, order);
 
-  const text = generateReceiptText();
-
-  const receiptWidth = 80;
-
-  const doc = new jsPDF({
-    unit: "mm",
-    format: [receiptWidth, 200], // initial height 200mm, will crop later
-  });
-  
-  const margin = 5;
-  const fontSize = 10;     // font size for receipt
-  const lineHeight = fontSize * 0.35; // ~3.5mm line height
-  // const maxLineWidth = 180; // 210mm (A4 width) - margins
-
-
-  doc.setFont("Courier", "normal"); // monospace font for receipt alignment
-  doc.setFontSize(fontSize);
-
-  // Split text lines by \n first
-  const rawLines = text.split("\n");
-
-  const maxLineWidth = receiptWidth - 2 * margin;
-
-  // Split text into lines that fit the page
-  const lines = doc.splitTextToSize(text, maxLineWidth);
-  lines.forEach((line:any, i:any) => {
-    doc.text(line, margin, margin + lineHeight * (i + 1));
-  });
-
-  doc.save(`receipt-${receipt.receiptNumber}.pdf`);
-};
+  };
 
   return (
     <Card className="w-full">
-      <CardHeader className="text-center pb-2">
+      <CardHeader className="pb-2 text-center">
         <CardTitle className="text-xl">Receipt</CardTitle>
         <CardDescription>
           {formattedReceiptNumber} • {formattedDate}
@@ -292,7 +354,7 @@ const generateReceiptText = (): string => {
       </CardHeader>
       <CardContent className="space-y-5">
         <div>
-          <h4 className="font-medium text-sm mb-2">Order Details</h4>
+          <h4 className="mb-2 text-sm font-medium">Order Details</h4>
           <div className="space-y-1 text-sm">
             <div className="flex justify-between">
               <span>Receipt #:</span>
@@ -321,8 +383,8 @@ const generateReceiptText = (): string => {
 
         {order && (
           <div>
-            <h4 className="font-medium text-sm mb-2">Items</h4>
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <h4 className="mb-2 text-sm font-medium">Items</h4>
+            <div className="space-y-1 overflow-y-auto max-h-40">
               {order.items.map((item) => (
                 <div key={item.id} className="text-sm">
                   <div className="flex justify-between">
@@ -334,7 +396,7 @@ const generateReceiptText = (): string => {
                     </span>
                   </div>
                   {item.notes && (
-                    <div className="text-xs text-gray-500 ml-4">
+                    <div className="ml-4 text-xs text-gray-500">
                       Note: {item.notes}
                     </div>
                   )}
@@ -366,10 +428,10 @@ const generateReceiptText = (): string => {
 
         {/* Payment Methods */}
         <div className="space-y-2">
-          <h4 className="font-medium text-sm">Payment</h4>
+          <h4 className="text-sm font-medium">Payment</h4>
           <div className="space-y-1">
             {paymentMethods.map((method, index) => (
-              <div key={index} className="text-sm space-y-1">
+              <div key={index} className="space-y-1 text-sm">
                 <div className="flex justify-between">
                   <span>{method}:</span>
                   <span>{formatCurrency(amountPaid)}</span>
@@ -378,7 +440,7 @@ const generateReceiptText = (): string => {
             ))}
 
             {change > 0 && (
-              <div className="flex justify-between text-sm text-green-600 font-medium">
+              <div className="flex justify-between text-sm font-medium text-green-600">
                 <span>Change:</span>
                 <span>{formatCurrency(change)}</span>
               </div>
@@ -388,7 +450,7 @@ const generateReceiptText = (): string => {
 
         <Separator />
 
-        <div className="text-sm border-t pt-4 mt-4">
+        <div className="pt-4 mt-4 text-sm border-t">
           <div className="flex justify-between">
             <span>Reference #:</span>
             <span>{receipt.receiptNumber}</span>
@@ -403,16 +465,16 @@ const generateReceiptText = (): string => {
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between flex-wrap gap-2">
+      <CardFooter className="flex flex-wrap justify-between gap-2">
         <Button onClick={handlePrint} className="flex items-center">
-          <Printer className="mr-2 h-4 w-4" /> Print Receipt
+          <Printer className="w-4 h-4 mr-2" /> Print Receipt
         </Button>
         <Button
           onClick={handleDownload}
           variant="outline"
           className="flex items-center"
         >
-          <Download className="mr-2 h-4 w-4" /> Download
+          <Download className="w-4 h-4 mr-2" /> Download
         </Button>
         {onClose && (
           <Button
@@ -424,7 +486,7 @@ const generateReceiptText = (): string => {
           </Button>
         )}
       </CardFooter>
-      <div className="text-center text-xs text-muted-foreground pt-2">
+      <div className="pt-2 text-xs text-center text-muted-foreground">
         Thank you for your visit!
       </div>
     </Card>

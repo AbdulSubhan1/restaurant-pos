@@ -19,6 +19,8 @@ export const menuItems = pgTable("menu_items", {
   categoryId: integer("category_id").references(() => categories.id),
   imageUrl: text("image_url"),
   available: boolean("available").notNull().default(true),
+  is_deleted: boolean("is_deleted").notNull().default(false),
+  is_active: boolean("is_active").notNull().default(true),
   preparationTime: integer("preparation_time"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
