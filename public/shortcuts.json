@@ -1,0 +1,84 @@
+{
+  "global": [
+    {
+      "keys": ["Control", "n"],
+      "display": "Ctrl + N",
+      "targetId": "newOrderBtn",
+      "targetAction": "click"
+    },
+    {
+      "keys": ["F2"],
+      "display": "F2",
+      "targetId": "main11",
+      "targetAction": "click"
+    },
+    {
+      "action": "search",
+      "keys": ["Control", "f"],
+      "display": "Ctrl + F"
+    },
+    {
+      "action": "search",
+      "keys": ["F3"],
+      "display": "F3"
+    },
+    {
+      "action": "printBill",
+      "keys": ["Control", "p"],
+      "display": "Ctrl + P"
+    },
+    {
+      "keys": ["F10"],
+      "display": "F10",
+      "targetId": "finalizeSaleBtn",
+      "targetAction": "click"
+    },
+    {
+      "keys": ["Control", "Enter"],
+      "display": "Ctrl + Enter",
+      "targetId": "finalizeSaleBtn",
+      "targetAction": "click"
+    },
+    {
+      "keys": ["Escape"],
+      "display": "Esc",
+      "targetId": "goGlobalBtn",
+      "targetAction": "click"
+    }
+  ],
+  "payments": [
+    {
+      "keys": ["F2"],
+      "display": "F2",
+      "targetId": "search",
+      "targetAction": "click"
+    },
+    {
+      "action": "increaseQuantity",
+      "keys": ["+"],
+      "display": "+"
+    },
+    {
+      "action": "decreaseQuantity",
+      "keys": ["-"],
+      "display": "-"
+    },
+    {
+      "action": "removeItem",
+      "keys": ["Delete"],
+      "display": "Del"
+    }
+  ],
+  "payment": [
+    {
+      "action": "selectCash",
+      "keys": ["Control", "1"],
+      "display": "Ctrl + 1"
+    },
+    {
+      "action": "selectCard",
+      "keys": ["Control", "2"],
+      "display": "Ctrl + 2"
+    }
+  ]
+}

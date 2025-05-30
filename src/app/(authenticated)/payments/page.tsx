@@ -202,6 +202,7 @@ export default function PaymentsPage() {
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <div className="flex flex-1 gap-2">
           <Input
+            id="search"
             placeholder="Search by reference or order ID"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

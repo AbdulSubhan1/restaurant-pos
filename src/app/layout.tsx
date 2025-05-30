@@ -1,7 +1,9 @@
+'use client';
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/providers/Providers";
+import useKeyboardShortcuts from "@/hooks/useKeyboardShortcuts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,17 +15,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Restaurant POS - Point of Sale System",
-  description: "A modern point of sale system for restaurants",
-  keywords: ["restaurant", "POS", "point of sale", "management"],
-};
+// export const metadata: Metadata = {
+//   title: "Restaurant POS - Point of Sale System",
+//   description: "A modern point of sale system for restaurants",
+//   keywords: ["restaurant", "POS", "point of sale", "management"],
+// };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { shortcutsConfig, isLoading, error, message, matchedAction, setMatchedAction } = useKeyboardShortcuts();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
