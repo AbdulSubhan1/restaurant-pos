@@ -51,6 +51,36 @@
             "description": "Prints the current bill or receipt."
         }
     ],
+    "orderScreen": [
+        {
+            "action": "createNewOrder",
+            "keys": [
+                "Control",
+                "Alt",
+                "n"
+            ],
+            "display": "Ctrl+n",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "switchToRightTab",
+            "keys": [
+                "Control",
+                "ArrowRight"
+            ],
+            "display": "Ctrl+h",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "switchToLeftTab",
+            "keys": [
+                "Control",
+                "ArrowLeft"
+            ],
+            "display": "Ctrl+h",
+            "description": "Prints the current bill or receipt."
+        }
+    ],
     "paymentScreen": [
         {
             "action": "openFirstReceipt",

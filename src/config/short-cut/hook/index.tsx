@@ -28,6 +28,27 @@ interface ShortcutsConfig {
  * @param {Record<string, () => void>} actionMap - An object mapping action names (from shortcuts.json) to handler functions.
  * Example: { newOrder: () => console.log('New Order!'), closeModal: () => console.log('Close Modal!') }
  */
+
+type ShortcutsArray = string[];
+function shouldPreventShortcut(event: KeyboardEvent, shortcuts: ShortcutsArray[]): boolean {
+  const pressedKeys = new Set<string>();
+
+  if (event.ctrlKey || event.metaKey) pressedKeys.add('ctrl');
+  if (event.shiftKey) pressedKeys.add('shift');
+  if (event.altKey) pressedKeys.add('alt');
+  pressedKeys.add(event.key.toLowerCase());
+
+  return shortcuts.some(shortcut => {
+    const normalized = shortcut.map(key => key.toLowerCase());
+    return normalized.length === pressedKeys.size &&
+      normalized.every(key => pressedKeys.has(key));
+  });
+}
+
+const blockedShortcuts: ShortcutsArray[] = [
+  // ['ctrl', 't'],
+]
+
 export const useKeyboardShortcuts = (
   scope: string,
   actionMap: Record<string, () => void>
@@ -61,11 +82,10 @@ export const useKeyboardShortcuts = (
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (isLoading || error || !shortcutsConfig) return;
 
-    if (event.ctrlKey && event.key.toLowerCase() === 't') {
+    // Define your blocked shortcuts
+    if (shouldPreventShortcut(event, blockedShortcuts)) {
       event.preventDefault();
-    }
-    if (event.ctrlKey && event.key.toLowerCase() === 'd') {
-      event.preventDefault();
+      console.log(`Blocked shortcut: ${event.key}`);
     }
     // Get the shortcuts for the current scope
     const currentScopeShortcuts: Shortcut[] | undefined = shortcutsConfig[scope];
