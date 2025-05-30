@@ -64,6 +64,9 @@ export const useKeyboardShortcuts = (
     if (event.ctrlKey && event.key.toLowerCase() === 't') {
       event.preventDefault();
     }
+    if (event.ctrlKey && event.key.toLowerCase() === 'd') {
+      event.preventDefault();
+    }
     // Get the shortcuts for the current scope
     const currentScopeShortcuts: Shortcut[] | undefined = shortcutsConfig[scope];
     if (!currentScopeShortcuts) return;

@@ -53,28 +53,30 @@
     ],
     "paymentScreen": [
         {
+            "action": "openFirstReceipt",
+            "keys": [
+                "Control",
+                "Enter"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "searchItems",
+            "keys": [
+                "Control",
+                "f"
+            ],
+            "display": "Ctrl+f",
+            "description": "Opens the search dialog for menu items or customers."
+        }
+    ],
+    "paymentModal": [
+        {
             "action": "printBill",
             "keys": [
                 "Control",
                 "p"
-            ],
-            "display": "Ctrl+P",
-            "description": "Prints the current bill or receipt."
-        },
-        {
-            "action": "openFirstReceipt",
-            "keys": [
-                "Control",
-                "Enter"
-            ],
-            "display": "Ctrl+P",
-            "description": "Prints the current bill or receipt."
-        },
-        {
-            "action": "openFirstReceipt",
-            "keys": [
-                "Escape",
-                "Enter"
             ],
             "display": "Ctrl+P",
             "description": "Prints the current bill or receipt."
@@ -89,13 +91,12 @@
             "description": "Downloads the current bill or receipt."
         },
         {
-            "action": "searchItems",
+            "action": "closeModal",
             "keys": [
-                "Control",
-                "f"
+                "Escape"
             ],
-            "display": "Ctrl+f",
-            "description": "Opens the search dialog for menu items or customers."
+            "display": "Esc",
+            "description": "Downloads the current bill or receipt."
         }
     ]
 }

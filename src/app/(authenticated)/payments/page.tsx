@@ -90,21 +90,13 @@ export default function PaymentsPage() {
 
   // short cut to open receipt in a new tab
   const paymentScreenActionHandlers: Record<string, () => void> = {
-
     searchItems: () => {
       console.log('Action: Opening Search Dialog (Payment Screen)');
-        seacrhBarRef.current?.focus()
+      seacrhBarRef.current?.focus()
       // Implement search dialog logic
     },
     openFirstReceipt: () => {
       viewReceipt(payments[0])
-    },
-    // Add a handler for 'Esc' to go back from payment screen
-    closeModal: () => {
-      console.log('Action: Closing Payment Screen');
-      setShowReceipt(false)
-      // setPaymentAmount(0);
-      // setPaymentMethod(null);
     },
   };
 
