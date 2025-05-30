@@ -6,6 +6,12 @@ import { eq } from "drizzle-orm";
 
 // GET /api/tables - Get all tables
 export async function GET(request: NextRequest) {
+  
+  const searchParams = request.nextUrl.searchParams;
+
+  const page = searchParams.get('page') || '1';
+  const limit = searchParams.get('limit') || '10';
+  
   try {
     // Verify authentication
     const token = request.cookies.get("auth_token")?.value;
@@ -23,13 +29,16 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
-
     // Get all active tables
     const allTables = await db
       .select()
       .from(tables)
       .where(eq(tables.active, true))
-      .orderBy(tables.name);
+      .orderBy(tables.name)
+      .limit(parseInt(limit))
+      .offset((parseInt(page) - 1) * parseInt(limit));
+      
+
 
     return NextResponse.json({ success: true, tables: allTables });
   } catch (error) {

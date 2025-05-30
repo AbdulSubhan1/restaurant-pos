@@ -3,11 +3,10 @@ import { db } from "@/db";
 import { tables } from "@/db/schema";
 import { verifyToken } from "@/lib/auth-utils";
 import { eq } from "drizzle-orm";
-
 // GET /api/tables/[id] - Get a specific table
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -27,7 +26,7 @@ export async function GET(
       );
     }
 
-    const { id: idString } = await params;
+    const { id: idString } = params;
     const id = parseInt(idString);
 
     if (isNaN(id)) {
@@ -64,7 +63,7 @@ export async function GET(
 // PUT /api/tables/[id] - Update a table
 export async function PUT(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const token = request.cookies.get("auth_token")?.value;
@@ -92,7 +91,7 @@ export async function PUT(
       );
     }
 
-    const { id: idString } = await params;
+    const { id: idString } =  params;
     const id = parseInt(idString);
 
     if (isNaN(id)) {
@@ -120,6 +119,8 @@ export async function PUT(
     const body = await request.json();
     const { name, capacity, status, xPosition, yPosition, notes, active } =
       body;
+      console.log('body - 20', body);
+      
 
     // Update the table
     const result = await db
