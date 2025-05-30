@@ -339,27 +339,27 @@ export default function PaymentDialog({
 
   return (
     <Dialog open={true} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[550px] ">
         <DialogHeader>
           <DialogTitle className="flex items-center">
-            <DollarSign className="mr-2 h-5 w-5" />
+            <DollarSign className="w-5 h-5 mr-2" />
             Process Payment
           </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           {/* Order Summary */}
-          <div className="bg-muted p-4 rounded-md">
-            <h3 className="font-medium mb-2">Order Summary</h3>
-            <div className="flex justify-between text-sm mb-1">
+          <div className="p-4 rounded-md bg-muted">
+            <h3 className="mb-2 font-medium">Order Summary</h3>
+            <div className="flex justify-between mb-1 text-sm">
               <span>Order #:</span>
               <span>{order.id}</span>
             </div>
-            <div className="flex justify-between text-sm mb-1">
+            <div className="flex justify-between mb-1 text-sm">
               <span>Table:</span>
               <span>{order.tableName}</span>
             </div>
-            <div className="flex justify-between text-sm mb-1">
+            <div className="flex justify-between mb-1 text-sm">
               <span>Items:</span>
               <span>{order.items?.length || 0}</span>
             </div>
@@ -382,22 +382,22 @@ export default function PaymentDialog({
           {useSplitPayment ? (
             // Split Payment UI
             <div className="space-y-4">
-              <div className="space-y-4 max-h-[300px] overflow-y-auto">
+              <div className="max-h-[350px] overflow-y-auto pr-2 space-y-4">
                 {splitPayments.map((payment, index) => (
                   <div
                     key={payment.id}
-                    className="p-3 border rounded-md space-y-3"
+                    className="p-3 space-y-3 border rounded-md"
                   >
-                    <div className="flex justify-between items-center">
+                    <div className="flex items-center justify-between">
                       <h4 className="font-medium">Payment {index + 1}</h4>
                       {splitPayments.length > 1 && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-8 w-8 p-0 text-red-500"
+                          className="w-8 h-8 p-0 text-red-500"
                           onClick={() => removeSplitPayment(payment.id)}
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
@@ -423,31 +423,31 @@ export default function PaymentDialog({
                           <SelectContent>
                             <SelectItem value={PAYMENT_METHODS.CASH}>
                               <div className="flex items-center">
-                                <DollarSign className="mr-2 h-4 w-4" />
+                                <DollarSign className="w-4 h-4 mr-2" />
                                 Cash
                               </div>
                             </SelectItem>
                             <SelectItem value={PAYMENT_METHODS.CREDIT_CARD}>
                               <div className="flex items-center">
-                                <CreditCard className="mr-2 h-4 w-4" />
+                                <CreditCard className="w-4 h-4 mr-2" />
                                 Credit Card
                               </div>
                             </SelectItem>
                             <SelectItem value={PAYMENT_METHODS.DEBIT_CARD}>
                               <div className="flex items-center">
-                                <CreditCard className="mr-2 h-4 w-4" />
+                                <CreditCard className="w-4 h-4 mr-2" />
                                 Debit Card
                               </div>
                             </SelectItem>
                             <SelectItem value={PAYMENT_METHODS.MOBILE_PAYMENT}>
                               <div className="flex items-center">
-                                <Smartphone className="mr-2 h-4 w-4" />
+                                <Smartphone className="w-4 h-4 mr-2" />
                                 Mobile Payment
                               </div>
                             </SelectItem>
                             <SelectItem value={PAYMENT_METHODS.GIFT_CARD}>
                               <div className="flex items-center">
-                                <GiftIcon className="mr-2 h-4 w-4" />
+                                <GiftIcon className="w-4 h-4 mr-2" />
                                 Gift Card
                               </div>
                             </SelectItem>
@@ -502,11 +502,11 @@ export default function PaymentDialog({
                 className="w-full"
                 onClick={addSplitPayment}
               >
-                <Plus className="mr-2 h-4 w-4" />
+                <Plus className="w-4 h-4 mr-2" />
                 Add Another Payment Method
               </Button>
 
-              <div className="bg-muted p-4 rounded-md space-y-2">
+              <div className="p-4 space-y-2 rounded-md bg-muted">
                 <div className="flex justify-between text-sm">
                   <span>Order Total:</span>
                   <span>{formatCurrency(orderTotal)}</span>
@@ -565,31 +565,31 @@ export default function PaymentDialog({
                       <SelectContent>
                         <SelectItem value={PAYMENT_METHODS.CASH}>
                           <div className="flex items-center">
-                            <DollarSign className="mr-2 h-4 w-4" />
+                            <DollarSign className="w-4 h-4 mr-2" />
                             Cash
                           </div>
                         </SelectItem>
                         <SelectItem value={PAYMENT_METHODS.CREDIT_CARD}>
                           <div className="flex items-center">
-                            <CreditCard className="mr-2 h-4 w-4" />
+                            <CreditCard className="w-4 h-4 mr-2" />
                             Credit Card
                           </div>
                         </SelectItem>
                         <SelectItem value={PAYMENT_METHODS.DEBIT_CARD}>
                           <div className="flex items-center">
-                            <CreditCard className="mr-2 h-4 w-4" />
+                            <CreditCard className="w-4 h-4 mr-2" />
                             Debit Card
                           </div>
                         </SelectItem>
                         <SelectItem value={PAYMENT_METHODS.MOBILE_PAYMENT}>
                           <div className="flex items-center">
-                            <Smartphone className="mr-2 h-4 w-4" />
+                            <Smartphone className="w-4 h-4 mr-2" />
                             Mobile Payment
                           </div>
                         </SelectItem>
                         <SelectItem value={PAYMENT_METHODS.GIFT_CARD}>
                           <div className="flex items-center">
-                            <GiftIcon className="mr-2 h-4 w-4" />
+                            <GiftIcon className="w-4 h-4 mr-2" />
                             Gift Card
                           </div>
                         </SelectItem>
@@ -665,7 +665,7 @@ export default function PaymentDialog({
                 </TabsContent>
               </Tabs>
 
-              <div className="bg-muted p-4 rounded-md space-y-2">
+              <div className="p-4 space-y-2 rounded-md bg-muted">
                 <div className="flex justify-between text-sm">
                   <span>Order Total:</span>
                   <span>{formatCurrency(orderTotal)}</span>

@@ -85,13 +85,13 @@ export function TablesList() {
   const getStatusBadge = (id: number, status: string) => {
     switch (status.toLowerCase()) {
       case "available":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-green-500">Available</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="bg-green-500 cursor-pointer">Available</Badge>;
       case "occupied":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-red-500">Occupied</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="bg-red-500 cursor-pointer">Occupied</Badge>;
       case "reserved":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-yellow-500">Reserved</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="bg-yellow-500 cursor-pointer">Reserved</Badge>;
       case "maintenance":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-gray-500">Maintenance</Badge>;
+        return <Badge onClick={() => toggleTableStatus(id, status)} className="bg-gray-500 cursor-pointer">Maintenance</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -111,11 +111,11 @@ export function TablesList() {
             onClick={fetchTables}
             disabled={isLoading}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
           </Button>
           <Button size="sm" onClick={() => router.push("/tables/new")}>
-            <PlusIcon className="h-4 w-4 mr-2" />
+            <PlusIcon className="w-4 h-4 mr-2" />
             Add Table
           </Button>
         </div>
@@ -123,17 +123,17 @@ export function TablesList() {
       <CardContent>
         {isLoading ? (
           <div className="flex justify-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <div className="w-12 h-12 border-t-2 border-b-2 border-blue-500 rounded-full animate-spin"></div>
           </div>
         ) : tables.length === 0 ? (
-          <div className="text-center py-8">
+          <div className="py-8 text-center">
             <p className="text-muted-foreground">No tables found.</p>
             <Button
               variant="outline"
               className="mt-4"
               onClick={() => router.push("/tables/new")}
             >
-              <PlusIcon className="h-4 w-4 mr-2" />
+              <PlusIcon className="w-4 h-4 mr-2" />
               Add your first table
             </Button>
           </div>

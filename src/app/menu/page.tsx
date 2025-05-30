@@ -1,18 +1,19 @@
+// pages/menu.tsx
 import Link from "next/link";
+import { GetServerSideProps } from "next";
 import { PublicMenuResponse } from "@/types/menu";
-import { CategoryTabs } from "@/components/menu/CategoryTabs";
 import { CategorySection } from "@/components/menu/CategorySection";
 import { CategoryTabsWrapper } from "@/components/menu/CategoryTabsWrapper";
 
-// Server Component
-export default async function MenuPage() {
+type MenuPageProps = {
+  menuData: PublicMenuResponse | null;
+};
+
+export const getServerSideProps: GetServerSideProps = async () => {
   let menuData: PublicMenuResponse | null = null;
 
   try {
-    const res = await fetch(`$http://localhost:3000/api/public/menu`, {
-      next: { revalidate: 60 }, // ISR: cache and revalidate every 60 seconds
-    });
-
+    const res = await fetch(`http://localhost:3001/api/public/menu`);
     const data = await res.json();
 
     if (!data.success) {
@@ -24,6 +25,14 @@ export default async function MenuPage() {
     console.error("Failed to fetch menu:", err);
   }
 
+  return {
+    props: {
+      menuData,
+    },
+  };
+};
+
+export default function MenuPage({ menuData }: MenuPageProps) {
   if (!menuData || !menuData.menu || menuData.menu.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen p-4">
@@ -52,7 +61,7 @@ export default async function MenuPage() {
         </p>
       </header>
 
-      {/* This part needs to be a client component */}
+      {/* This part should be a Client Component */}
       <CategoryTabsWrapper categories={menuData.menu} />
 
       <main className="px-4 py-8 mx-auto max-w-7xl">

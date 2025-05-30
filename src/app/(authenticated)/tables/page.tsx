@@ -11,7 +11,7 @@ export default function TablesPage() {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Table Management</h1>
         <div className="flex space-x-2">
           <Button
@@ -20,7 +20,7 @@ export default function TablesPage() {
             onClick={() => setViewMode("grid")}
             className="flex items-center gap-1"
           >
-            <LayoutGrid className="h-4 w-4" />
+            <LayoutGrid className="w-4 h-4" />
             <span className="hidden sm:inline">Grid View</span>
           </Button>
           <Button
@@ -29,7 +29,7 @@ export default function TablesPage() {
             onClick={() => setViewMode("list")}
             className="flex items-center gap-1"
           >
-            <List className="h-4 w-4" />
+            <List className="w-4 h-4" />
             <span className="hidden sm:inline">List View</span>
           </Button>
         </div>

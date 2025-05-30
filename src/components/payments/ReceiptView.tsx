@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
 import { useEffect } from "react";
-
+import jsPDF from "jspdf";
 // Define the types
 type OrderItem = {
   id: number;
