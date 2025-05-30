@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Search, ChevronLeft, ChevronRight, Receipt } from "lucide-react";
@@ -21,6 +21,7 @@ import {
 import { toast } from "sonner";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import ReceiptView from "@/components/payments/ReceiptView";
+import useKeyboardShortcuts from "@/config/short-cut/hook";
 
 // Define the types
 type Payment = {
@@ -71,7 +72,7 @@ type Receipt = {
 
 export default function PaymentsPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showReceipt, setShowReceipt] = useState(false);
   const [receiptData, setReceiptData] = useState<Receipt | null>(null);
@@ -79,6 +80,7 @@ export default function PaymentsPage() {
   // Pagination
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  let seacrhBarRef = useRef<HTMLInputElement>(null)
   const pageSize = 10;
 
   // Filters
@@ -86,11 +88,23 @@ export default function PaymentsPage() {
   const [dateRange, setDateRange] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  // short cut to open receipt in a new tab
+  const paymentScreenActionHandlers: Record<string, () => void> = {
+    searchItems: () => {
+      console.log('Action: Opening Search Dialog (Payment Screen)');
+      seacrhBarRef.current?.focus()
+      // Implement search dialog logic
+    },
+    openFirstReceipt: () => {
+      viewReceipt(payments[0])
+    },
+  };
+
+  useKeyboardShortcuts('paymentScreen', paymentScreenActionHandlers)
+
   // Function to fetch payments
   const fetchPayments = useCallback(async () => {
-    setLoading(true);
     setError(null);
-
     try {
       // Build query parameters
       let queryParams = `?page=${page}&limit=${pageSize}`;
@@ -140,6 +154,10 @@ export default function PaymentsPage() {
     fetchPayments();
   }, [fetchPayments]);
 
+  useEffect(() => {
+    setLoading(true);
+    fetchPayments();
+  }, [])
   // Handle search
   const handleSearch = () => {
     setPage(1); // Reset to first page when searching
@@ -206,6 +224,7 @@ export default function PaymentsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"
+            ref={seacrhBarRef}
           />
           <Button onClick={handleSearch} variant="outline">
             <Search className="h-4 w-4" />
@@ -308,15 +327,14 @@ export default function PaymentsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          payment.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : payment.status === "refunded"
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${payment.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : payment.status === "refunded"
                             ? "bg-orange-100 text-orange-800"
                             : payment.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
+                              ? "bg-red-100 text-red-800"
+                              : "bg-blue-100 text-blue-800"
+                          }`}
                       >
                         {payment.status.charAt(0).toUpperCase() +
                           payment.status.slice(1)}

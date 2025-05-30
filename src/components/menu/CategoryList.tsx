@@ -13,6 +13,8 @@ import {
 import { formatDate } from "@/lib/utils";
 import Image from "next/image";
 
+// Define the Category type for UI
+// (matches the UI needs, not DB schema directly)
 type Category = {
   id: number;
   name: string;

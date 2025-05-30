@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Printer, Download } from "lucide-react";
 import jsPDF from "jspdf";
+import useKeyboardShortcuts from "@/config/short-cut/hook";
 // Define the types
 type OrderItem = {
   id: number;
@@ -96,8 +97,8 @@ export default function ReceiptView({
   onClose,
 }: ReceiptViewProps) {
   // Format the receipt number with leading zeros
- const receiptNumberStr = receipt.receiptNumber?.toString() ?? "";
-const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
+  const receiptNumberStr = receipt.receiptNumber?.toString() ?? "";
+  const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
 
   // Format the current date
   const today = new Date();
@@ -122,80 +123,80 @@ const formattedReceiptNumber = `#${receiptNumberStr.padStart(8, "0")}`;
   // For the server name:
   const serverName = receipt.server;
 
-const padRight = (text: string, length: number) => {
-  if (text.length >= length) return text;
-  return text + " ".repeat(length - text.length);
-};
-
-const padLeft = (text: string, length: number) => {
-  if (text.length >= length) return text;
-  return " ".repeat(length - text.length) + text;
-};
-
-// 40 char wide receipt example
-const generateReceiptText = (): string => {
-  const lines: string[] = [];
-  const width = 40;
-
-  // Header (centered)
-  const centerText = (text: string) => {
-    const spaces = Math.floor((width - text.length) / 2);
-    return " ".repeat(spaces) + text;
+  const padRight = (text: string, length: number) => {
+    if (text.length >= length) return text;
+    return text + " ".repeat(length - text.length);
   };
 
-  lines.push(centerText("RESTAURANT POS SYSTEM"));
-  lines.push(centerText("-----------------------"));
-  lines.push(centerText(`Receipt: ${formattedReceiptNumber}`));
-  lines.push(padLeft("Date:", 0) + padLeft(formattedDate, 25));
-  lines.push(padLeft("Order #:",0) + padLeft(receipt.orderId.toString(), 22));
-  if (order) {
-    lines.push(padLeft("Table:", 0) + padLeft(order.tableName, 25));
-  }
-  lines.push(padLeft("Server:", 0) + padLeft(serverName, 25));
-  lines.push(""); // spacer
+  const padLeft = (text: string, length: number) => {
+    if (text.length >= length) return text;
+    return " ".repeat(length - text.length) + text;
+  };
 
-  if (order) {
-    lines.push("ITEMS");
-    lines.push("-----");
+  // 40 char wide receipt example
+  const generateReceiptText = (): string => {
+    const lines: string[] = [];
+    const width = 40;
 
-    order.items.forEach((item) => {
-      const itemTotal = parseFloat(item.price) * item.quantity;
-      lines.push(padRight(`${item.quantity}x ${item.menuItemName}`, 30) + padLeft(formatCurrency(itemTotal), 10));
-      if (item.notes) {
-        lines.push("  Note: " + item.notes);
-      }
-    });
+    // Header (centered)
+    const centerText = (text: string) => {
+      const spaces = Math.floor((width - text.length) / 2);
+      return " ".repeat(spaces) + text;
+    };
 
+    lines.push(centerText("RESTAURANT POS SYSTEM"));
+    lines.push(centerText("-----------------------"));
+    lines.push(centerText(`Receipt: ${formattedReceiptNumber}`));
+    lines.push(padLeft("Date:", 0) + padLeft(formattedDate, 25));
+    lines.push(padLeft("Order #:", 0) + padLeft(receipt.orderId.toString(), 22));
+    if (order) {
+      lines.push(padLeft("Table:", 0) + padLeft(order.tableName, 25));
+    }
+    lines.push(padLeft("Server:", 0) + padLeft(serverName, 25));
     lines.push(""); // spacer
-  }
 
-  // Totals
-  lines.push(padLeft("Subtotal:", 0) + padLeft(formatCurrency(subtotal), 23));
-  lines.push(padLeft("Tip:", 0) + padLeft(formatCurrency(tipTotal), 28));
-  lines.push(padLeft("Total:", 0) + padLeft(formatCurrency(total), 26));
-  lines.push(""); // spacer
+    if (order) {
+      lines.push("ITEMS");
+      lines.push("-----");
 
-  lines.push("PAYMENT");
-  lines.push("-----------");
+      order.items.forEach((item) => {
+        const itemTotal = parseFloat(item.price) * item.quantity;
+        lines.push(padRight(`${item.quantity}x ${item.menuItemName}`, 30) + padLeft(formatCurrency(itemTotal), 10));
+        if (item.notes) {
+          lines.push("  Note: " + item.notes);
+        }
+      });
 
-  if (receipt.splitPayment && receipt.payments?.length) {
-    receipt.payments.forEach((p) => {
-      const amount = formatCurrency(parseFloat(p.amount));
-      lines.push(padRight(p.paymentMethod, 30) + padLeft(amount, 10));
-    });
-  } else {
-    lines.push(padLeft(receipt.paymentMethod, 0) + padLeft(formatCurrency(amountPaid), 28));
-  }
+      lines.push(""); // spacer
+    }
 
-  if (change > 0) {
-    lines.push(padRight("Change:", 30) + padLeft(formatCurrency(change), 10));
-  }
+    // Totals
+    lines.push(padLeft("Subtotal:", 0) + padLeft(formatCurrency(subtotal), 23));
+    lines.push(padLeft("Tip:", 0) + padLeft(formatCurrency(tipTotal), 28));
+    lines.push(padLeft("Total:", 0) + padLeft(formatCurrency(total), 26));
+    lines.push(""); // spacer
 
-  lines.push("");
-  lines.push(centerText("Thank you for your visit!"));
+    lines.push("PAYMENT");
+    lines.push("-----------");
 
-  return lines.join("\n");
-};
+    if (receipt.splitPayment && receipt.payments?.length) {
+      receipt.payments.forEach((p) => {
+        const amount = formatCurrency(parseFloat(p.amount));
+        lines.push(padRight(p.paymentMethod, 30) + padLeft(amount, 10));
+      });
+    } else {
+      lines.push(padLeft(receipt.paymentMethod, 0) + padLeft(formatCurrency(amountPaid), 28));
+    }
+
+    if (change > 0) {
+      lines.push(padRight("Change:", 30) + padLeft(formatCurrency(change), 10));
+    }
+
+    lines.push("");
+    lines.push(centerText("Thank you for your visit!"));
+
+    return lines.join("\n");
+  };
 
 
   // Handle printing the receipt
@@ -244,44 +245,51 @@ const generateReceiptText = (): string => {
   };
 
   // Handle downloading the receipt
- const handleDownload = () => {
-  if (onDownload) {
-    onDownload();
-    return;
-  }
+  const handleDownload = () => {
+    if (onDownload) {
+      onDownload();
+      return;
+    }
 
-  const text = generateReceiptText();
+    const text = generateReceiptText();
 
-  const receiptWidth = 80;
+    const receiptWidth = 80;
 
-  const doc = new jsPDF({
-    unit: "mm",
-    format: [receiptWidth, 200], // initial height 200mm, will crop later
-  });
-  
-  const margin = 5;
-  const fontSize = 10;     // font size for receipt
-  const lineHeight = fontSize * 0.35; // ~3.5mm line height
-  // const maxLineWidth = 180; // 210mm (A4 width) - margins
+    const doc = new jsPDF({
+      unit: "mm",
+      format: [receiptWidth, 200], // initial height 200mm, will crop later
+    });
+
+    const margin = 5;
+    const fontSize = 10;     // font size for receipt
+    const lineHeight = fontSize * 0.35; // ~3.5mm line height
+    // const maxLineWidth = 180; // 210mm (A4 width) - margins
 
 
-  doc.setFont("Courier", "normal"); // monospace font for receipt alignment
-  doc.setFontSize(fontSize);
+    doc.setFont("Courier", "normal"); // monospace font for receipt alignment
+    doc.setFontSize(fontSize);
 
-  // Split text lines by \n first
-  const rawLines = text.split("\n");
+    // Split text lines by \n first
+    const rawLines = text.split("\n");
 
-  const maxLineWidth = receiptWidth - 2 * margin;
+    const maxLineWidth = receiptWidth - 2 * margin;
 
-  // Split text into lines that fit the page
-  const lines = doc.splitTextToSize(text, maxLineWidth);
-  lines.forEach((line:any, i:any) => {
-    doc.text(line, margin, margin + lineHeight * (i + 1));
-  });
+    // Split text into lines that fit the page
+    const lines = doc.splitTextToSize(text, maxLineWidth);
+    lines.forEach((line: any, i: any) => {
+      doc.text(line, margin, margin + lineHeight * (i + 1));
+    });
 
-  doc.save(`receipt-${receipt.receiptNumber}.pdf`);
-};
+    doc.save(`receipt-${receipt.receiptNumber}.pdf`);
+  };
 
+  const paymentScreenActionHandlers: Record<string, () => void> = {
+    printBill: () => handlePrint(),
+    downLoadBill: () => handleDownload(),
+    closeModal: () => onClose?.(),
+  };
+
+  useKeyboardShortcuts('paymentModal', paymentScreenActionHandlers);
   return (
     <Card className="w-full">
       <CardHeader className="text-center pb-2">

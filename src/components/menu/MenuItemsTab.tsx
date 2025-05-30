@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import MenuItemList from "./MenuItemList";
 import MenuItemForm from "./MenuItemForm";
 import { toast } from "sonner";
+import { useRouter, useSearchParams } from "next/navigation";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
-// Define the MenuItem type
+// Define the MenuItem type for UI
 type MenuItem = {
   id: number;
   name: string;
@@ -22,31 +30,77 @@ type MenuItem = {
   categoryName?: string;
 };
 
+// Add a type for DB menu items
+// (matches the DB schema, with imageUrl)
+type DBMenuItem = {
+  id: number;
+  name: string;
+  description: string | null;
+  price: number;
+  imageUrl: string | null;
+  available: boolean;
+  categoryId: number | null;
+  createdAt: string;
+  updatedAt: string;
+  categoryName?: string;
+};
+
 // Define the Category type
 type Category = {
   id: number;
   name: string;
 };
 
-export default function MenuItemsTab() {
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+// Add prop type
+type MenuItemsTabProps = {
+  initialMenuItems: DBMenuItem[];
+  initialCategories: Category[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+};
+
+export default function MenuItemsTab({
+  initialMenuItems,
+  initialCategories,
+  pagination,
+}: MenuItemsTabProps) {
+  // Map DB menu items to component's MenuItem type (imageUrl -> image)
+  const mappedMenuItems: MenuItem[] = initialMenuItems.map((item) => ({
+    ...item,
+    image: item.imageUrl ?? null,
+  }));
+  const [menuItems, setMenuItems] = useState<MenuItem[]>(mappedMenuItems);
+  const [categories, setCategories] = useState<Category[]>(initialCategories);
+  const [loading, setLoading] = useState(false); // SSR: no loading on mount
   const [error, setError] = useState<string | null>(null);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-  // Fetch menu items and categories on component mount
-  useEffect(() => {
-    fetchMenuItems();
-    fetchCategories();
-  }, []);
+  // Pagination controls
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("page", newPage.toString());
+    router.push(`?${params.toString()}`);
+  };
 
-  // Function to fetch menu items from API
+  // Add limit dropdown handler
+  const handleLimitChange = (newLimit: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("limit", newLimit);
+    params.set("page", "1"); // Reset to first page on limit change
+    router.push(`?${params.toString()}`);
+  };
+
+  // Function to fetch menu items from API (for manual refresh)
   const fetchMenuItems = async () => {
     setLoading(true);
     setError(null);
-
     try {
       const response = await fetch("/api/menu-items", {
         method: "GET",
@@ -55,19 +109,20 @@ export default function MenuItemsTab() {
         },
         credentials: "include",
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch menu items");
       }
-
-      // Make sure data.menuItems exists and is an array before setting state
       if (!data.menuItems || !Array.isArray(data.menuItems)) {
-        console.warn("API did not return menu items array:", data);
         setMenuItems([]);
       } else {
-        setMenuItems(data.menuItems);
+        const mappedData: MenuItem[] = data.menuItems.map(
+          (item: DBMenuItem) => ({
+            ...item,
+            image: item.imageUrl ?? null,
+          })
+        );
+        setMenuItems(mappedData);
       }
     } catch (err) {
       setError(
@@ -79,7 +134,7 @@ export default function MenuItemsTab() {
     }
   };
 
-  // Function to fetch categories for the dropdown
+  // Function to fetch categories for the dropdown (for manual refresh)
   const fetchCategories = async () => {
     try {
       const response = await fetch("/api/categories", {
@@ -89,17 +144,13 @@ export default function MenuItemsTab() {
         },
         credentials: "include",
       });
-
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Failed to fetch categories");
       }
-
       setCategories(data.categories);
     } catch (err) {
       console.error("Error fetching categories:", err);
-      // We don't set loading or error state here as it's a secondary fetch
     }
   };
 
@@ -231,6 +282,24 @@ export default function MenuItemsTab() {
   return (
     <div>
       <Card>
+        {/* Limit Dropdown */}
+        <div className="flex justify-end mb-2">
+          <Select
+            value={pagination.limit.toString()}
+            onValueChange={handleLimitChange}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Rows per page" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle>Menu Items</CardTitle>
           <Button
@@ -292,6 +361,31 @@ export default function MenuItemsTab() {
                 onEdit={setEditingItem}
                 onDelete={handleDeleteMenuItem}
               />
+
+              {/* Pagination Controls */}
+              <div className="flex justify-between items-center mt-4">
+                <div className="text-sm text-gray-500">
+                  Showing page {pagination.page} of {pagination.totalPages}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(pagination.page - 1)}
+                    disabled={pagination.page <= 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handlePageChange(pagination.page + 1)}
+                    disabled={pagination.page >= pagination.totalPages}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
             </>
           )}
         </CardContent>

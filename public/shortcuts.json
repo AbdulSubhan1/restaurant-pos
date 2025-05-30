@@ -1,0 +1,132 @@
+{
+    "global": [
+        {
+            "action": "goToTables",
+            "keys": [
+                "Control",
+                "Alt",
+                "t"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "goToPayments",
+            "keys": [
+                "Control",
+                "Alt",
+                "p"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "goToOrders",
+            "keys": [
+                "Control",
+                "Alt",
+                "o"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "goToMenu",
+            "keys": [
+                "Control",
+                "Alt",
+                "m"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "goToKitchen",
+            "keys": [
+                "Control",
+                "Alt",
+                "k"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        }
+    ],
+    "orderScreen": [
+        {
+            "action": "createNewOrder",
+            "keys": [
+                "Control",
+                "Alt",
+                "n"
+            ],
+            "display": "Ctrl+n",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "switchToRightTab",
+            "keys": [
+                "Control",
+                "ArrowRight"
+            ],
+            "display": "Ctrl+h",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "switchToLeftTab",
+            "keys": [
+                "Control",
+                "ArrowLeft"
+            ],
+            "display": "Ctrl+h",
+            "description": "Prints the current bill or receipt."
+        }
+    ],
+    "paymentScreen": [
+        {
+            "action": "openFirstReceipt",
+            "keys": [
+                "Control",
+                "Enter"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "searchItems",
+            "keys": [
+                "Control",
+                "f"
+            ],
+            "display": "Ctrl+f",
+            "description": "Opens the search dialog for menu items or customers."
+        }
+    ],
+    "paymentModal": [
+        {
+            "action": "printBill",
+            "keys": [
+                "Control",
+                "p"
+            ],
+            "display": "Ctrl+P",
+            "description": "Prints the current bill or receipt."
+        },
+        {
+            "action": "downLoadBill",
+            "keys": [
+                "Control",
+                "d"
+            ],
+            "display": "Ctrl+d",
+            "description": "Downloads the current bill or receipt."
+        },
+        {
+            "action": "closeModal",
+            "keys": [
+                "Escape"
+            ],
+            "display": "Esc",
+            "description": "Downloads the current bill or receipt."
+        }
+    ]
+}

@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import CreateOrderDialog from "./CreateOrderDialog";
 import OrderCard from "./OrderCard";
 import OrderDetailsDialog from "./OrderDetailsDialog";
+import useKeyboardShortcuts from "@/config/short-cut/hook";
 
 // Define the types
 type OrderItem = {
@@ -77,6 +78,11 @@ export default function ActiveOrdersTab() {
     // Clean up interval on component unmount
     return () => clearInterval(intervalId);
   }, []);
+  useKeyboardShortcuts('orderScreen', {
+    createNewOrder: () => {
+      setIsCreatingOrder(true);
+    }
+  });
 
   // Function to fetch active orders
   const fetchActiveOrders = async () => {
