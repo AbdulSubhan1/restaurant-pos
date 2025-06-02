@@ -230,17 +230,17 @@ export default function ActiveOrdersTab() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">Active Orders</h2>
         <Button onClick={() => setIsCreatingOrder(true)}>
-          <Plus className="mr-2 h-4 w-4" /> New Order
+          <Plus className="w-4 h-4 mr-2" /> New Order
         </Button>
       </div>
 
-      {loading && <p className="text-center py-4">Loading orders...</p>}
+      {loading && <p className="py-4 text-center">Loading orders...</p>}
 
       {error && (
-        <div className="bg-red-50 p-4 rounded border border-red-200 mb-6">
+        <div className="p-4 mb-6 border border-red-200 rounded bg-red-50">
           <p className="text-red-600">{error}</p>
           <Button
             variant="outline"
@@ -262,19 +262,19 @@ export default function ActiveOrdersTab() {
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
         {/* Pending Orders Column */}
         <div>
           <Card className="mb-4">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
-                <Clock className="mr-2 h-5 w-5 text-yellow-500" />
+                <Clock className="w-5 h-5 mr-2 text-yellow-500" />
                 Pending Orders
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {pendingOrders.length === 0 ? (
-                <p className="text-center text-gray-500 py-2">
+                <p className="py-2 text-center text-gray-500">
                   No pending orders
                 </p>
               ) : (
@@ -294,7 +294,7 @@ export default function ActiveOrdersTab() {
                         }
                         className="w-full bg-blue-500 hover:bg-blue-600"
                       >
-                        Start Preparing <ArrowRight className="ml-2 h-4 w-4" />
+                        Start Preparing <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>
                     }
                   />
@@ -309,13 +309,13 @@ export default function ActiveOrdersTab() {
           <Card className="mb-4">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
-                <Utensils className="mr-2 h-5 w-5 text-blue-500" />
+                <Utensils className="w-5 h-5 mr-2 text-blue-500" />
                 In Progress
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {inProgressOrders.length === 0 ? (
-                <p className="text-center text-gray-500 py-2">
+                <p className="py-2 text-center text-gray-500">
                   No in-progress orders
                 </p>
               ) : (
@@ -327,15 +327,15 @@ export default function ActiveOrdersTab() {
                       setSelectedOrder(order);
                       setShowDetails(true);
                     }}
-                    actionButton={
-                      <Button
-                        size="sm"
-                        onClick={() => handleStatusUpdate(order.id, "ready")}
-                        className="w-full bg-green-500 hover:bg-green-600"
-                      >
-                        Mark Ready <Check className="ml-2 h-4 w-4" />
-                      </Button>
-                    }
+                    // actionButton={
+                    //   <Button
+                    //     size="sm"
+                    //     onClick={() => handleStatusUpdate(order.id, "ready")}
+                    //     className="w-full bg-green-500 hover:bg-green-600"
+                    //   >
+                    //     Mark Ready <Check className="w-4 h-4 ml-2" />
+                    //   </Button>
+                    // }
                   />
                 ))
               )}
@@ -348,13 +348,13 @@ export default function ActiveOrdersTab() {
           <Card className="mb-4">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
-                <CheckCircle className="mr-2 h-5 w-5 text-green-500" />
+                <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
                 Ready for Service
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {readyOrders.length === 0 ? (
-                <p className="text-center text-gray-500 py-2">
+                <p className="py-2 text-center text-gray-500">
                   No orders ready for service
                 </p>
               ) : (
@@ -367,16 +367,16 @@ export default function ActiveOrdersTab() {
                         setShowDetails(true);
                       }}
                     />
-                    <div className="mt-2 flex justify-end">
+                    {/* <div className="flex justify-end mt-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                        className="text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100"
                         onClick={() => handleStatusUpdate(order.id, "served")}
                       >
                         Mark as Served
                       </Button>
-                    </div>
+                    </div> */}
                   </div>
                 ))
               )}
@@ -389,13 +389,13 @@ export default function ActiveOrdersTab() {
           <Card className="mb-4">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center">
-                <Check className="mr-2 h-5 w-5 text-purple-500" />
+                <Check className="w-5 h-5 mr-2 text-purple-500" />
                 Served Orders
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {servedOrders.length === 0 ? (
-                <p className="text-center text-gray-500 py-2">
+                <p className="py-2 text-center text-gray-500">
                   No served orders
                 </p>
               ) : (
@@ -408,11 +408,11 @@ export default function ActiveOrdersTab() {
                         setShowDetails(true);
                       }}
                     />
-                    <div className="mt-2 flex justify-end">
+                    <div className="flex justify-end mt-2">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                        className="text-indigo-700 border-indigo-200 bg-indigo-50 hover:bg-indigo-100"
                         onClick={() =>
                           handleStatusUpdate(order.id, "completed")
                         }

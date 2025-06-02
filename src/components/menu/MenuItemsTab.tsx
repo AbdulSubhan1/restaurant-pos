@@ -8,7 +8,14 @@ import MenuItemList from "./MenuItemList";
 import MenuItemForm from "./MenuItemForm";
 import { toast } from "sonner";
 import { MenuItem, Category } from "../../types/shared"; // adjust the path
-
+import page from "@/app/page";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 export default function MenuItemsTab() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -16,12 +23,12 @@ export default function MenuItemsTab() {
   const [error, setError] = useState<string | null>(null);
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-
+  const [status, setStatus] = useState<string>("all");
   // Fetch menu items and categories on component mount
   useEffect(() => {
     fetchMenuItems();
     fetchCategories();
-  }, []);
+  }, [status]);
 
   // Function to fetch menu items from API
   const fetchMenuItems = async () => {
@@ -29,7 +36,14 @@ export default function MenuItemsTab() {
     setError(null);
 
     try {
-      const response = await fetch("/api/menu-items", {
+      const limit = 10;
+      let queryParams = `?limit=${limit}`;
+
+      if (status && status !== "all") {
+        queryParams += `&status=${status}`; // only adds filter if not "all"
+      }
+
+      const response = await fetch(`/api/menu-items${queryParams}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -43,13 +57,7 @@ export default function MenuItemsTab() {
         throw new Error(data.message || "Failed to fetch menu items");
       }
 
-      // Make sure data.menuItems exists and is an array before setting state
-      if (!data.menuItems || !Array.isArray(data.menuItems)) {
-        console.warn("API did not return menu items array:", data);
-        setMenuItems([]);
-      } else {
-        setMenuItems(data.menuItems);
-      }
+      setMenuItems(data.items || []);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred"
@@ -214,9 +222,23 @@ export default function MenuItemsTab() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle>Menu Items</CardTitle>
+          <div className="ml-auto ">
+            <Select 
+              value={status}
+              onValueChange={(val) => setStatus(val)} // just update state
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="unavailable">Unavailable</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             onClick={() => setIsAddingItem(true)}
-            className="ml-auto"
             disabled={isAddingItem}
           >
             <Plus className="w-4 h-4 mr-2" /> Add Menu Item

@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { menuItems } from "@/db/schema/menu-items";
 import { categories } from "@/db/schema/categories";
-import { eq } from "drizzle-orm";
 import { verifyToken } from "@/lib/auth-utils";
+import { and, eq } from "drizzle-orm";
+import { SQL } from "drizzle-orm";
+// Remove incorrect import and move logic into handler
 
-// GET /api/menu-items - Get all menu items
+// Example GET handler (add this if you don't already have one)
 export async function GET(request: NextRequest) {
-  try {
-    const token = request.cookies.get("auth_token")?.value;
+  const token = request.cookies.get("auth_token")?.value;
 
     if (!token) {
       return NextResponse.json(
@@ -24,37 +25,45 @@ export async function GET(request: NextRequest) {
         { status: 401 }
       );
     }
+  const searchParams = request.nextUrl.searchParams;
+  const status = searchParams.get("status")?.toLowerCase();
 
-    // Fetch all menu items with their category information
-    const items = await db
-      .select({
-        id: menuItems.id,
-        name: menuItems.name,
-        description: menuItems.description,
-        price: menuItems.price,
-        imageUrl: menuItems.imageUrl,
-        available: menuItems.available,
-        preparationTime: menuItems.preparationTime,
-        categoryId: menuItems.categoryId,
-        createdAt: menuItems.createdAt,
-        updatedAt: menuItems.updatedAt,
-        categoryName: categories.name,
-      })
-       .from(menuItems)
-      .leftJoin(categories, eq(menuItems.categoryId, categories.id))
-      .where(eq(menuItems.is_deleted, false));
+  const conditions: SQL<unknown>[] = [
+    eq(menuItems.is_deleted, false),
+    eq(categories.is_deleted, false),
+  ];
 
-    return NextResponse.json({
-      success: true,
-      menuItems: items,
-    });
-  } catch (error) {
-    console.error("Error fetching menu items:", error);
-    return NextResponse.json(
-      { success: false, message: "Failed to fetch menu items" },
-      { status: 500 }
-    );
+  if (status === "available") {
+    conditions.push(eq(menuItems.available, true));
+  } else if (status === "unavailable") {
+    conditions.push(eq(menuItems.available, false));
   }
+  // else (status is "all" or missing), don't add any availability filter
+
+  const limit = Number(searchParams.get("limit")) || 10;
+  const offset = Number(searchParams.get("offset")) || 0;
+
+  const items = await db
+    .select({
+      id: menuItems.id,
+      name: menuItems.name,
+      description: menuItems.description,
+      price: menuItems.price,
+      imageUrl: menuItems.imageUrl,
+      available: menuItems.available,
+      preparationTime: menuItems.preparationTime,
+      categoryId: menuItems.categoryId,
+      createdAt: menuItems.createdAt,
+      updatedAt: menuItems.updatedAt,
+      categoryName: categories.name,
+    })
+    .from(menuItems)
+    .leftJoin(categories, eq(menuItems.categoryId, categories.id))
+    .where(and(...conditions))
+    .limit(limit)
+    .offset(offset);
+
+  return NextResponse.json({ success: true, items });
 }
 
 // POST /api/menu-items - Create a new menu item
