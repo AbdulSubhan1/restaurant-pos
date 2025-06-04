@@ -212,13 +212,9 @@ export async function DELETE(
     // Perform soft delete by setting active to false
     const result = await db
       .update(tables)
-      .set({
-        active: false,
-        updatedAt: new Date(),
-      })
+      .set({active: false, updatedAt: new Date()})
       .where(eq(tables.id, id))
       .returning();
-
     return NextResponse.json({ success: true, table: result[0] });
   } catch (error) {
     console.error(`Error deleting table:`, error);

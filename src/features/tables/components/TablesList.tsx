@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Table } from "@/db/schema/tables";
+import { Edit, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -81,6 +82,31 @@ export function TablesList() {
       );
     }
   };
+  const handleDeleteTable = async (tableId: number) => {
+     try {
+      const response = await fetch(`/api/tables/${tableId}`, {
+      method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete menu item");
+      }
+
+      // Remove the item from the list
+      setTables((prev) => prev.filter((item) => item.id !== tableId));
+      toast.success("Menu item deleted successfully");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to delete menu item"
+      );
+      console.error("Error deleting menu item:", err);
+    }
+  };
 
   const getStatusBadge = (id: number, status: string) => {
     switch (status.toLowerCase()) {
@@ -145,7 +171,7 @@ export function TablesList() {
                 <TableHead>Capacity</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Notes</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -155,14 +181,24 @@ export function TablesList() {
                   <TableCell>{table.capacity}</TableCell>
                   <TableCell>{getStatusBadge(table.id, table.status)}</TableCell>
                   <TableCell>{table.notes || "-"}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-center">
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => router.push(`/tables/${table.id}`)}
+                        title="Edit table"
                     >
-                      Edit
+                    <Edit className="w-4 h-4" />
                     </Button>
+                    <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleDeleteTable(table.id)}
+                  className="text-red-500 hover:text-red-700"
+                  title="Delete table"
+                >
+                   <Trash2 className="w-4 h-4" />
+                </Button>
                   </TableCell>
                 </TableRow>
               ))}
