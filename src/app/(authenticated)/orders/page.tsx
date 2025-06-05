@@ -1,5 +1,3 @@
-"use client";
-
 import OrderTabs from "@/components/orders/OrderTabs";
 
 export default function OrdersPage() {

@@ -1,5 +1,3 @@
-"use client";
-
 import KitchenDisplayTab from "@/components/orders/KitchenDisplayTab";
 
 export default function KitchenPage() {

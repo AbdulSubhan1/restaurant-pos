@@ -1,5 +1,3 @@
-"use client";
-
 import { TableForm } from "@/features/tables/components/TableForm";
 
 export default function NewTablePage() {
