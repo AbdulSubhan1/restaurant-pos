@@ -1,5 +1,3 @@
-"use client";
-
 import { Suspense } from "react";
 import { MenuQRCode } from "@/components/menu/MenuQRCode";
 import { Heading } from "@/components/ui/heading";

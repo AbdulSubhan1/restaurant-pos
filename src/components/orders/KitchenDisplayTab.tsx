@@ -32,8 +32,11 @@ type Order = {
   completedAt: string | null;
   items: OrderItem[];
 };
+interface kitchenProps {
+  initialkitchen: any[];
 
-export default function KitchenDisplayTab() {
+}
+export default function KitchenDisplayTab({ initialkitchen }: kitchenProps) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

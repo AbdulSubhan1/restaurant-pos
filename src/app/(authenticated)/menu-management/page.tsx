@@ -2,10 +2,7 @@ import { Metadata } from "next";
 import MenuTabs from "@/components/menu/MenuTabs";
 import { getAllCategories, getPaginatedMenuItems } from "@/server/menuService";
 
-export const metadata: Metadata = {
-  title: "Menu - Restaurant POS",
-  description: "Manage restaurant menu items",
-};
+
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
