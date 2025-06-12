@@ -58,14 +58,24 @@
       "targetAction": "click"
     }
   ],
-  "payments": [
+  "/payments": [
     {
       "keys": [
-        "F2"
+        "Control",
+        "f"
       ],
       "display": "F2",
       "targetId": "search",
-      "targetAction": "click"
+      "targetAction": "focus"
+    },
+    {
+      "keys": [
+        "Control",
+        "Enter"
+      ],
+      "display": "Ctrl + Enter",
+      "targetId": "search",
+      "targetAction": "focus"
     },
     {
       "action": "increaseQuantity",

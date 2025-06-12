@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // --- Type Definitions (Copy these from your main types file or define them here) ---
-interface Shortcut {
+export interface Shortcut {
     keys: string[];
     display: string;
+    description?: string;
     action?: string;
     targetId?: string;
     targetAction?: string;
 }
 
-interface ShortcutsConfig {
+export interface ShortcutsConfig {
     global: Shortcut[];
     orderEntry: Shortcut[];
     payment: Shortcut[];
@@ -22,7 +23,7 @@ interface ShortcutsConfig {
 // }
 
 // Return type for the useKeyboardShortcuts hook
-interface UseKeyboardShortcutsReturn {
+export interface UseKeyboardShortcutsReturn {
     shortcutsConfig: ShortcutsConfig | null;
     isLoading: boolean;
     error: Error | null;
@@ -31,14 +32,14 @@ interface UseKeyboardShortcutsReturn {
     setMatchedAction: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
-interface GlobalScreenProps {
+export interface GlobalScreenProps {
     shortcuts: ShortcutsConfig;
     setMessage: React.Dispatch<React.SetStateAction<string | null>>;
     // setCurrentScreen now changes window.location
     setCurrentScreen: (screenPath: string) => void;
 }
 
-interface OrderEntryScreenProps {
+export interface OrderEntryScreenProps {
     shortcuts: ShortcutsConfig;
     setMessage: React.Dispatch<React.SetStateAction<string | null>>;
     // setCurrentScreen now changes window.location
@@ -46,7 +47,7 @@ interface OrderEntryScreenProps {
     handleAction: React.MutableRefObject<Record<string, () => void> | null>;
 }
 
-interface PaymentScreenProps {
+export interface PaymentScreenProps {
     // setCurrentScreen now changes window.location
     setCurrentScreen: (screenPath: string) => void;
     setGlobalMessage: React.Dispatch<React.SetStateAction<string | null>>;
