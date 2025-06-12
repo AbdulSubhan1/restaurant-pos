@@ -129,6 +129,7 @@ export default function OrderHistoryTab() {
         <div className="flex flex-1 gap-2">
           <Input
             placeholder="Search by order or table number"
+            id="orderSearchBar"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="max-w-sm"

@@ -1,46 +1,58 @@
 {
   "global": [
     {
-      "keys": ["Control", "n"],
+      "keys": [
+        "Control",
+        "n"
+      ],
       "display": "Ctrl + N",
       "targetId": "newOrderBtn",
       "targetAction": "click"
     },
     {
-      "keys": ["F2"],
+      "keys": [
+        "F2"
+      ],
       "display": "F2",
       "targetId": "main11",
       "targetAction": "click"
     },
     {
       "action": "search",
-      "keys": ["Control", "f"],
-      "display": "Ctrl + F"
-    },
-    {
-      "action": "search",
-      "keys": ["F3"],
+      "keys": [
+        "F3"
+      ],
       "display": "F3"
     },
     {
       "action": "printBill",
-      "keys": ["Control", "p"],
+      "keys": [
+        "Control",
+        "p"
+      ],
       "display": "Ctrl + P"
     },
     {
-      "keys": ["F10"],
+      "keys": [
+        "F10"
+      ],
       "display": "F10",
       "targetId": "finalizeSaleBtn",
       "targetAction": "click"
     },
     {
-      "keys": ["Control", "Enter"],
+      "keys": [
+        "Control",
+        "Enter"
+      ],
       "display": "Ctrl + Enter",
       "targetId": "finalizeSaleBtn",
       "targetAction": "click"
     },
     {
-      "keys": ["Escape"],
+      "keys": [
+        "Escape"
+      ],
       "display": "Esc",
       "targetId": "goGlobalBtn",
       "targetAction": "click"
@@ -48,37 +60,45 @@
   ],
   "payments": [
     {
-      "keys": ["F2"],
+      "keys": [
+        "F2"
+      ],
       "display": "F2",
       "targetId": "search",
       "targetAction": "click"
     },
     {
       "action": "increaseQuantity",
-      "keys": ["+"],
+      "keys": [
+        "+"
+      ],
       "display": "+"
     },
     {
       "action": "decreaseQuantity",
-      "keys": ["-"],
+      "keys": [
+        "-"
+      ],
       "display": "-"
     },
     {
       "action": "removeItem",
-      "keys": ["Delete"],
+      "keys": [
+        "Delete"
+      ],
       "display": "Del"
     }
   ],
-  "payment": [
+  "/orders": [
     {
-      "action": "selectCash",
-      "keys": ["Control", "1"],
-      "display": "Ctrl + 1"
-    },
-    {
-      "action": "selectCard",
-      "keys": ["Control", "2"],
-      "display": "Ctrl + 2"
+      "action": "search",
+      "keys": [
+        "Control",
+        "f"
+      ],
+      "display": "Ctrl + F",
+      "targetId": "orderSearchBar",
+      "targetAction": "focus"
     }
   ]
 }

@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export default function Home() {  
   return (
-    <main className="flex min-h-screen flex-col" id="main11" onClick={() => console.log("i am clicked by id")}>
+    <main className="flex min-h-screen flex-col" id="main11" onClick={(e) => console.log("i am clicked by id", e)}>
       <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-b from-blue-50 to-white">
         <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
           Restaurant POS System

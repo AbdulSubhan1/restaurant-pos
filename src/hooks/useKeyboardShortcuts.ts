@@ -61,15 +61,6 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
     const [message, setMessage] = useState<string>('');
     const [matchedAction, setMatchedAction] = useState<string | null>(null);
 
-    // Helper to map URL paths to internal screen names
-    const getScreenFromPath = useCallback((pathname: string): string => {
-        switch (pathname) {
-            case '/':
-                return 'global';
-            default:
-                return 'global'; // Default to global screen
-        }
-    }, []);
 
     // Load the shortcuts configuration from the public directory
     useEffect(() => {
@@ -98,9 +89,9 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
 
         const handleKeyDown = (event: KeyboardEvent) => {
             // Determine currentScreen from the URL path
-            const currentScreenFromUrl = getScreenFromPath(window.location.pathname);
+            const currentScreenFromUrl = window.location.pathname;
 
-            console.log("i am triggered by keydown");
+            console.log("i am triggered by keydown", currentScreenFromUrl, window.location.pathname);
             if (
                 (event.ctrlKey && event.key === 'p') ||
                 (event.ctrlKey && event.key === 'n') ||
@@ -116,7 +107,7 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
                 ...(shortcutsConfig.global || []),
                 ...(shortcutsConfig[currentScreenFromUrl] || []) // Use screen from URL
             ];
-
+            console.log(applicableShortcuts , shortcutsConfig )
             for (const shortcut of applicableShortcuts) {
                 const isMatch = shortcut.keys.every(key => {
                     if (key === 'Control') return event.ctrlKey;
@@ -137,7 +128,8 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
                 if (isMatch && !hasExtraModifiers) {
                     if (shortcut.targetId && shortcut.targetAction) {
                         const targetElement = document.getElementById(shortcut.targetId);
-                        console.log(document)
+                        console.log(document.querySelector(`#${shortcut.targetId}`));
+                        console.log(document);
                         if (targetElement) {
                             console.log(`Attempting to perform ${shortcut.targetAction} on element #${shortcut.targetId}`);
                             if (typeof (targetElement as any)[shortcut.targetAction] === 'function') {
@@ -170,7 +162,7 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
             window.removeEventListener('keydown', handleKeyDown);
             //   window.removeEventListener('popstate', handleKeyDown);
         };
-    }, [shortcutsConfig, getScreenFromPath]); // Dependencies: shortcutsConfig and getScreenFromPath
+    }, [shortcutsConfig]); // Dependencies: shortcutsConfig
 
     return { shortcutsConfig, isLoading, error, message, matchedAction, setMatchedAction };
 };
