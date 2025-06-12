@@ -99,6 +99,15 @@
       "display": "Ctrl + F",
       "targetId": "orderSearchBar",
       "targetAction": "focus"
+    },
+    {
+      "action": "newOrder",
+      "keys": [
+        "F2"
+      ],
+      "display": "Ctrl + N",
+      "targetId": "newOrderModalOpenBtn",
+      "targetAction": "click"
     }
   ]
 }

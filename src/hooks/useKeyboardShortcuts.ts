@@ -72,6 +72,14 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
                 }
                 const config: ShortcutsConfig = await response.json();
 
+                // IMPORTANT: Ensure the keys in shortcuts.json match the paths (e.g., "/orders", "/payment")
+                // or have a consistent mapping. The provided JSON uses "/orders" and "payments" (note plural).
+                // Let's adjust the config on load if necessary, or ensure JSON keys are consistent with paths.
+                // For now, assuming JSON keys match path names or simple screen names like "global".
+                // If you use "/orders" as a key for OrderEntryScreen, that's fine.
+                // If you use "payment" as a key for /payment, then a mapping is needed.
+                // Based on user's JSON, "payments" is a key, and "/orders" is a key.
+
                 setShortcutsConfig(config);
             } catch (e: any) {
                 setError(e);
@@ -103,10 +111,15 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
                 event.preventDefault();
             }
 
+            // --- CRITICAL CHANGE: Prioritize page-specific shortcuts ---
             const applicableShortcuts: Shortcut[] = [
-                ...(shortcutsConfig.global || []),
-                ...(shortcutsConfig[currentScreenFromUrl] || []) // Use screen from URL
+                // Page-specific shortcuts first
+                ...(shortcutsConfig[currentScreenFromUrl] || []),
+                // Global shortcuts second
+                ...(shortcutsConfig.global || [])
             ];
+            // --- End CRITICAL CHANGE ---
+
             console.log(applicableShortcuts , shortcutsConfig )
             for (const shortcut of applicableShortcuts) {
                 const isMatch = shortcut.keys.every(key => {
@@ -156,6 +169,8 @@ const useKeyboardShortcuts = (): UseKeyboardShortcutsReturn => {
 
         // Add event listener for keydown and popstate (for browser back/forward)
         window.addEventListener('keydown', handleKeyDown);
+        // We'll keep popstate commented out for now as it can sometimes cause double triggers
+        // when combined with programmatic navigation that also updates history.
         // window.addEventListener('popstate', handleKeyDown); // Re-evaluate shortcuts on URL change
 
         return () => {
