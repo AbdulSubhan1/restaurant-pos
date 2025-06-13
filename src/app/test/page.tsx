@@ -2,6 +2,9 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'; // Import useRouter for navigation
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialogHeader } from '@/components/ui/alert-dialog';
+import { ArrowLeft } from 'lucide-react';
 
 // --- Type Definitions (Ensure these are imported or defined consistently across your project) ---
 interface Shortcut {
@@ -28,6 +31,28 @@ const ShortcutManagerScreen: React.FC = () => {
     const [error, setError] = useState<Error | null>(null);
     const [listeningFor, setListeningFor] = useState<{ category: string; index: number } | null>(null);
     const listeningKeyRef = useRef<HTMLDivElement>(null); // Ref for the key capture overlay
+
+    // State for modals
+    const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
+    const [showAddShortcutModal, setShowAddShortcutModal] = useState(false);
+    const [addShortcutCategory, setAddShortcutCategory] = useState<string | null>(null);
+    const [newShortcutDetails, setNewShortcutDetails] = useState<Partial<Shortcut>>({
+        description: '',
+        action: '',
+        targetId: '',
+        targetAction: '',
+        keys: [],
+        display: ''
+    });
+    const [newShortcutType, setNewShortcutType] = useState<'action' | 'target'>('action');
+
+    const [showEditShortcutModal, setShowEditShortcutModal] = useState(false);
+    const [editingShortcut, setEditingShortcut] = useState<{ category: string; index: number; data: Shortcut } | null>(null);
+    const [editedShortcutType, setEditedShortcutType] = useState<'action' | 'target'>('action');
+
+    const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<{ category: string; index?: number } | null>(null);
 
     // Refs for capturing key combinations and debouncing
     const pressedKeysRef = useRef<Set<string>>(new Set());
@@ -103,6 +128,9 @@ const ShortcutManagerScreen: React.FC = () => {
             .join(' + ');
 
         // Update the shortcutsConfig state local to this component
+        if (showAddShortcutModal) {
+            setNewShortcutDetails(prevDetails => ({ ...prevDetails, keys: newKeys, display: newDisplay }));
+        }
         setShortcutsConfig(prevConfig => {
             if (!prevConfig) return null;
             const updatedConfig = { ...prevConfig };
@@ -259,6 +287,43 @@ const ShortcutManagerScreen: React.FC = () => {
         }
     };
 
+    const handleAddShortcut = () => {
+        if (!addShortcutCategory || !shortcutsConfig) return;
+
+
+        console.log("Des ", newShortcutDetails, pressedKeysRef.current)
+        if (newShortcutDetails.description && !newShortcutDetails.description.trim() || !newShortcutDetails.keys || newShortcutDetails.keys.length === 0) {
+            console.warn('Description and Shortcut keys are required for new shortcut.');
+            return;
+        }
+
+        const newShortcut: Shortcut = { ...newShortcutDetails } as Shortcut;
+
+        setShortcutsConfig(prevConfig => {
+            if (!prevConfig) return null;
+            const updatedConfig = { ...prevConfig };
+            const categoryShortcuts = updatedConfig[addShortcutCategory] ? [...updatedConfig[addShortcutCategory]] : [];
+            categoryShortcuts.push(newShortcut);
+            updatedConfig[addShortcutCategory] = categoryShortcuts;
+            return updatedConfig;
+        });
+
+        setShowAddShortcutModal(false);
+        setAddShortcutCategory(null);
+    };
+    const openAddShortcutModal = (category: string) => {
+        setAddShortcutCategory(category);
+        setNewShortcutDetails({
+            description: '',
+            action: '',
+            targetId: '',
+            targetAction: '',
+            keys: [],
+            display: ''
+        });
+        setNewShortcutType('action'); // Default to action type
+        setShowAddShortcutModal(true);
+    };
     const handleGoBack = () => {
         router.back(); // Use Next.js router to go back
     };
@@ -274,68 +339,18 @@ const ShortcutManagerScreen: React.FC = () => {
 
     return (
         <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
-            <h2 className="text-3xl font-bold text-center text-orange-600 mb-6">Manage Keyboard Shortcuts</h2>
+            <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">Manage Keyboard Shortcuts</h2>
             <p className="text-lg text-gray-700 text-center mb-8">
                 Click on the current shortcut display to change it, then press the desired key combination.
             </p>
 
-            {shortcutsConfig && Object.entries(shortcutsConfig).map(([category, shortcuts]) => (
-                <div key={category} className="mb-8 last:mb-0">
-                    <h3 className="text-2xl font-semibold capitalize text-gray-700 mb-4 border-b pb-2 border-gray-300 capitalize">
-                        {category.replace('/', '') } Shortcuts
-                    </h3>
-                    <div className="overflow-x-auto">
-                        {shortcuts.length > 0 ? (
-                             <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
-                            <thead>
-                                <tr className="bg-gray-100 border-b">
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action/Target</th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Current Shortcut</th>
-                                    <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {shortcuts.map((s, index) => (
-                                    <tr key={`${category}-${index}`} className="border-b last:border-b-0 hover:bg-gray-50">
-                                        <td className="px-4 py-3 text-base text-gray-800">
-                                            {s.action ? s.action.replace(/([A-Z])/g, ' $1') : `#${s.targetId} ${s.targetAction}`}
-                                        </td>
-                                        <td className="px-4 py-3 cursor-pointer"
-                                            onClick={() => handleStartRemap(category, index)}
-                                            title={!listeningFor ? "Click to change" : "Press keys now"}
-                                        >
-                                            {listeningFor && listeningFor.category === category && listeningFor.index === index ? (
-                                                <div ref={listeningKeyRef} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-bold animate-pulse inline-block min-w-[90px] text-center">
-                                                    listening...
-                                                </div>
-                                            ) : (
-                                                <div className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-bold inline-block min-w-[90px] text-center">
-                                                    {s.display} {/* Use s.display as it's the formatted string */}
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3 text-gray-700">{s.description}</td>
-                                        <td className="px-4 py-3 text-right">
-                                            {/* Removed the Change button as requested */}
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        ) : (
-                            <p className="text-gray-700 text-center">No shortcuts found for this category.</p>
-                        )
-                        }
-                    </div>
-                </div>
-            ))}
 
-            <div className="flex justify-between mt-8">
+            <div className="flex justify-between my-8">
                 <button
                     onClick={handleGoBack}
-                    className="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                    className=" font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                 >
-                    Go Back
+                    <ArrowLeft className="h-4 w-4 mr-2" /> 
                 </button>
                 <button
                     onClick={handleSaveChanges}
@@ -345,6 +360,178 @@ const ShortcutManagerScreen: React.FC = () => {
                     Save Changes
                 </button>
             </div>
+            
+            {shortcutsConfig && Object.entries(shortcutsConfig).map(([category, shortcuts]) => (
+                <div key={category} className="mb-8 last:mb-0">
+                    <div className="flex justify-between mb-4 border-b pb-2  text-gray-700  border-gray-300">
+                        <h3 className="text-2xl font-semibold capitalize">
+                            {category.replace('/', '')} Shortcuts
+                        </h3>
+                        <div className="flex gap-2 justify-end">
+                            <button
+                                onClick={() => openAddShortcutModal(category)}
+                                className="bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 px-3 rounded-md transition duration-150"
+                            >
+                                Add Shortcut
+                            </button>
+                            {/* {category !== 'global' && ( // Cannot delete global category
+                                <button
+                                    // onClick={() => handleDeleteConfirmation(category)}
+                                    className="bg-red-500 hover:bg-red-600 text-white text-sm py-1.5 px-3 rounded-md transition duration-150"
+                                >
+                                    Delete Category
+                                </button>
+                            )} */}
+                        </div>
+                    </div>
+                    <div className="overflow-x-auto">
+                        {shortcuts.length > 0 ? (
+                            <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+                                <thead>
+                                    <tr className="bg-gray-100 border-b">
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action/Target</th>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Current Shortcut</th>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {shortcuts.map((s, index) => (
+                                        <tr key={`${category}-${index}`} className="border-b last:border-b-0 hover:bg-gray-50">
+                                            <td className="px-4 py-3 text-base text-gray-800">
+                                                {s.action ? s.action.replace(/([A-Z])/g, ' $1') : `#${s.targetId} ${s.targetAction}`}
+                                            </td>
+                                            <td className="px-4 py-3 cursor-pointer"
+                                                onClick={() => handleStartRemap(category, index)}
+                                                title={!listeningFor ? "Click to change" : "Press keys now"}
+                                            >
+                                                {listeningFor && listeningFor.category === category && listeningFor.index === index ? (
+                                                    <div ref={listeningKeyRef} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-bold animate-pulse inline-block min-w-[90px] text-center">
+                                                        listening...
+                                                    </div>
+                                                ) : (
+                                                    <div className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-bold inline-block min-w-[90px] text-center">
+                                                        {s.display} {/* Use s.display as it's the formatted string */}
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td className="px-4 py-3 text-gray-700">{s.description}</td>
+                                            <td className="px-4 py-3 text-right">
+                                                {/* Removed the Change button as requested */}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        ) : (
+                            <p className="text-gray-700 text-center">No shortcuts found for this category.</p>
+                        )
+                        }
+                    </div>
+                    <div className="border-t border-gray-400 my-10 border-dashed" />
+                </div>
+            ))}
+
+            <Dialog open={showAddShortcutModal} onOpenChange={(open) => {
+                setShowAddShortcutModal(open);
+                if (!open) { // If closing the modal
+                    // setIsListeningForShortcut(false);
+                    setListeningFor(null);
+                    pressedKeysRef.current.clear();
+                }
+            }}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <AlertDialogHeader>
+                        <DialogTitle>Add New Shortcut to "{addShortcutCategory}"</DialogTitle>
+                    </AlertDialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <input
+                                type="text"
+                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                                value={newShortcutDetails.description}
+                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, description: e.target.value }))}
+                                placeholder="e.g., Quick Add Item"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Shortcut Keys</label>
+                            <div
+                                ref={listeningKeyRef}
+                                className={`mt-1 p-2 border rounded-md cursor-pointer text-center font-bold ${listeningFor && listeningFor.category === addShortcutCategory && listeningFor.index === -1 ? 'bg-yellow-100 text-yellow-800 animate-pulse' : 'bg-gray-100 text-gray-800'}`}
+                                onClick={() => {
+                                    if (!listeningFor) {
+                                        setListeningFor({ category: addShortcutCategory!, index: -1 });
+                                        pressedKeysRef.current.clear();
+                                        if (listeningKeyRef.current) {
+                                            listeningKeyRef.current.innerText = 'Press new shortcut...';
+                                        }
+                                        // setIsListeningForShortcut(true);
+                                    }
+                                }}
+                                title={!listeningFor ? "Click to set shortcut" : "Press keys now"}
+                            >
+                                {listeningFor && listeningFor.category === addShortcutCategory && listeningFor.index === -1 || listeningKeyRef.current?.innerText ? (
+                                    listeningKeyRef.current?.innerText || 'listening...'
+                                ) : (
+                                    newShortcutDetails.display || 'Click to set shortcut (e.g., Ctrl + Enter)'
+                                )}
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Action Name</label>
+                            <input
+                                type="text"
+                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                                value={newShortcutDetails.action || ''}
+                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, action: e.target.value }))}
+                                placeholder="e.g., addItem"
+                            />
+                            <label className="block text-sm font-medium text-gray-700">Target ID</label>
+                            <input
+                                type="text"
+                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                                value={newShortcutDetails.targetId || ''}
+                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, targetId: e.target.value }))}
+                                placeholder="e.g., myButtonId"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700">Target Action</label>
+                            <input
+                                type="text"
+                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
+                                value={newShortcutDetails.targetAction || ''}
+                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, targetAction: e.target.value }))}
+                                placeholder="e.g., click or focus"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-2">
+                        <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
+                            onClick={() => {
+                                setShowAddShortcutModal(false);
+                                //  setIsListeningForShortcut(false);
+                                setListeningFor(null); pressedKeysRef.current.clear();
+                            }}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                            onClick={handleAddShortcut}
+                            disabled={!!listeningFor}
+                        >
+                            Add Shortcut
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
