@@ -4,7 +4,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation'; // Import useRouter for navigation
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialogHeader } from '@/components/ui/alert-dialog';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, BadgePlus, CopyPlus, Edit, HardDriveUpload, Plus, PlusIcon, PlusSquare, Save, Trash, Trash2, Trash2Icon, TrashIcon } from 'lucide-react';
 
 // --- Type Definitions (Ensure these are imported or defined consistently across your project) ---
 interface Shortcut {
@@ -350,17 +350,17 @@ const ShortcutManagerScreen: React.FC = () => {
                     onClick={handleGoBack}
                     className=" font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                 >
-                    <ArrowLeft className="h-4 w-4 mr-2" /> 
+                    <ArrowLeft className="h-4 w-4 mr-2" />
                 </button>
                 <button
                     onClick={handleSaveChanges}
-                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                     disabled={!!listeningFor} // Disable if listening for shortcut
                 >
-                    Save Changes
+                    <HardDriveUpload  className="h-6 w-6 " />
                 </button>
             </div>
-            
+
             {shortcutsConfig && Object.entries(shortcutsConfig).map(([category, shortcuts]) => (
                 <div key={category} className="mb-8 last:mb-0">
                     <div className="flex justify-between mb-4 border-b pb-2  text-gray-700  border-gray-300">
@@ -370,9 +370,9 @@ const ShortcutManagerScreen: React.FC = () => {
                         <div className="flex gap-2 justify-end">
                             <button
                                 onClick={() => openAddShortcutModal(category)}
-                                className="bg-blue-500 hover:bg-blue-600 text-white text-sm py-1.5 px-3 rounded-md transition duration-150"
+                                className="bg-blue-400 hover:bg-blue-500 p-3 text-white text-sm  rounded-md transition duration-150"
                             >
-                                Add Shortcut
+                                <CopyPlus className=" h-4 w-4" />
                             </button>
                             {/* {category !== 'global' && ( // Cannot delete global category
                                 <button
@@ -389,9 +389,10 @@ const ShortcutManagerScreen: React.FC = () => {
                             <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                                 <thead>
                                     <tr className="bg-gray-100 border-b">
-                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action/Target</th>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action</th>
                                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Current Shortcut</th>
                                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Edit/Delete</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -417,6 +418,22 @@ const ShortcutManagerScreen: React.FC = () => {
                                             <td className="px-4 py-3 text-gray-700">{s.description}</td>
                                             <td className="px-4 py-3 text-right">
                                                 {/* Removed the Change button as requested */}
+                                            </td>
+                                            <td className="px-4 py-3 text-right">
+                                                <div className="flex justify-end gap-2">
+                                                    <button
+                                                        // onClick={() => openEditShortcutModal(category, index, s)}
+                                                        className="bg-gray-200 hover:bg-gray-300  cursor-pointer text-sm py-1 px-2 rounded-sm transition duration-150"
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </button>
+                                                    <button
+                                                        // onClick={() => handleDeleteConfirmation(category, index)}
+                                                        className="bg-red-200 hover:bg-red-300 cursor-pointer text-sm py-1 px-2 rounded-sm transition duration-150"
+                                                    >
+                                                        <Trash className="h-4 w-4" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
