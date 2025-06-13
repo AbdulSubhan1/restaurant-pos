@@ -1,12 +1,13 @@
 'use client'; // Required for Next.js Client Components
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation'; // Import useRouter for navigation
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { AlertDialogHeader } from '@/components/ui/alert-dialog';
-import { ArrowLeft, BadgePlus, CopyPlus, Edit, HardDriveUpload, Plus, PlusIcon, PlusSquare, Save, Trash, Trash2, Trash2Icon, TrashIcon } from 'lucide-react';
+// Removed: import { useRouter } from 'next/navigation'; // Import useRouter for navigation
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'; // Assuming these are relative paths to your shadcn/ui components
+import { AlertDialogHeader } from '@/components/ui/alert-dialog'; // Assuming this is relative path
+import { ArrowLeft, CopyPlus, Edit, HardDriveUpload, Trash } from 'lucide-react'; // Adjusted icons to only what's used
 
-// --- Type Definitions (Ensure these are imported or defined consistently across your project) ---
+
+// --- Type Definitions ---
 interface Shortcut {
     keys: string[];
     display: string;
@@ -23,21 +24,25 @@ interface ShortcutsConfig {
     [key: string]: Shortcut[]; // For dynamic keys like "/orders"
 }
 
-// Props for ShortcutManagerScreen - now an empty interface as no props will be passed
+// ShortcutManagerScreen Component
 const ShortcutManagerScreen: React.FC = () => {
-    const router = useRouter(); // Initialize Next.js router
+    // Replaced: const router = useRouter(); // Initialize Next.js router
     const [shortcutsConfig, setShortcutsConfig] = useState<ShortcutsConfig | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
+
+    // State for capturing key combinations
     const [listeningFor, setListeningFor] = useState<{ category: string; index: number } | null>(null);
     const listeningKeyRef = useRef<HTMLDivElement>(null); // Ref for the key capture overlay
+    const pressedKeysRef = useRef<Set<string>>(new Set()); // Tracks currently pressed keys
+    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null); // Debounce for key combinations
 
-    // State for modals
-    const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-    const [newCategoryName, setNewCategoryName] = useState('');
-    const [showAddShortcutModal, setShowAddShortcutModal] = useState(false);
-    const [addShortcutCategory, setAddShortcutCategory] = useState<string | null>(null);
-    const [newShortcutDetails, setNewShortcutDetails] = useState<Partial<Shortcut>>({
+    // Unified state for Add/Edit Shortcut Modal
+    const [isShortcutModalOpen, setIsShortcutModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'add' | 'edit'>('add'); // 'add' or 'edit'
+    const [modalCategory, setModalCategory] = useState<string | null>(null); // Category for the current modal operation
+    const [modalShortcutIndex, setModalShortcutIndex] = useState<number | null>(null); // Index for edit mode
+    const [modalShortcutDetails, setModalShortcutDetails] = useState<Partial<Shortcut>>({ // Holds data for both add/edit
         description: '',
         action: '',
         targetId: '',
@@ -45,18 +50,11 @@ const ShortcutManagerScreen: React.FC = () => {
         keys: [],
         display: ''
     });
-    const [newShortcutType, setNewShortcutType] = useState<'action' | 'target'>('action');
 
-    const [showEditShortcutModal, setShowEditShortcutModal] = useState(false);
-    const [editingShortcut, setEditingShortcut] = useState<{ category: string; index: number; data: Shortcut } | null>(null);
-    const [editedShortcutType, setEditedShortcutType] = useState<'action' | 'target'>('action');
-
+    // State for Delete Confirmation Modal
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-    const [deleteTarget, setDeleteTarget] = useState<{ category: string; index?: number } | null>(null);
+    const [deleteTarget, setDeleteTarget] = useState<{ category: string; index?: number } | null>(null); // For category or specific shortcut
 
-    // Refs for capturing key combinations and debouncing
-    const pressedKeysRef = useRef<Set<string>>(new Set());
-    const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     // --- Data Fetching for this component's shortcuts configuration ---
     useEffect(() => {
@@ -85,29 +83,13 @@ const ShortcutManagerScreen: React.FC = () => {
         }
     }, [listeningFor]);
 
-    // Function to finalize the captured shortcut
-    const finalizeShortcut = useCallback((list?: any) => {
-        if (!listeningFor) return; // Should only run if actively listening
-
-        console.log(list, " lisstt")
-        console.log("pressed keys", pressedKeysRef.current)
-        // Get the captured keys, normalize, and sort for consistent representation
-        const newKeys = Array.from(pressedKeysRef.current).sort((a, b) => {
-            // Define an order for modifier keys to keep them consistent (Ctrl, Shift, Alt, Meta)
-            const order: { [key: string]: number } = { 'Control': 1, 'Shift': 2, 'Alt': 3, 'Meta': 4 };
-            const valA = order[a] || 99; // Non-modifiers get a higher value
-            const valB = order[b] || 99;
-
-            if (valA !== valB) return valA - valB; // Sort modifiers first
-            return a.localeCompare(b); // Then sort alphabetically
-        });
-
-        // Validation for the captured shortcut
-        // Disallow empty shortcut or only 'Meta' key alone (common OS shortcut conflict)
-        if (newKeys.length === 0 || (newKeys.length === 1 && newKeys[0] === 'Meta')) {
-            console.warn('Invalid shortcut: No keys pressed or only Meta key alone. Please press a valid combination.');
-            setListeningFor(null); // Exit listening mode
-            pressedKeysRef.current.clear(); // Clear all pressed keys
+    // Function to finalize the captured shortcut, used by both add and edit
+    const finalizeShortcut = useCallback(() => {
+        // If not actively listening, or the modal is closed, do nothing
+        if (!listeningFor || !isShortcutModalOpen) {
+            // Also reset if the modal somehow closed while listening
+            setListeningFor(null);
+            pressedKeysRef.current.clear();
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
                 debounceTimerRef.current = null;
@@ -115,80 +97,67 @@ const ShortcutManagerScreen: React.FC = () => {
             return;
         }
 
-        // Format the captured keys for display
+        const newKeys = Array.from(pressedKeysRef.current).sort((a, b) => {
+            const order: { [key: string]: number } = { 'Control': 1, 'Shift': 2, 'Alt': 3, 'Meta': 4 };
+            const valA = order[a] || 99;
+            const valB = order[b] || 99;
+
+            if (valA !== valB) return valA - valB;
+            return a.localeCompare(b);
+        });
+
+        // Validation: Disallow empty shortcut or only 'Meta' key alone
+        if (newKeys.length === 0 || (newKeys.length === 1 && newKeys[0] === 'Meta')) {
+            console.warn('Invalid shortcut: No keys pressed or only Meta key alone. Please press a valid combination.');
+            setListeningFor(null);
+            pressedKeysRef.current.clear();
+            if (debounceTimerRef.current) {
+                clearTimeout(debounceTimerRef.current);
+                debounceTimerRef.current = null;
+            }
+            return;
+        }
+
         const newDisplay = newKeys
             .map(key => {
                 if (key === 'Control') return 'Ctrl';
                 if (key === 'Shift') return 'Shift';
                 if (key === 'Alt') return 'Alt';
                 if (key === 'Meta') return 'Meta';
-                // Capitalize single letters, keep other keys (e.g., "ArrowRight", "Escape") as is
                 return key.length === 1 ? key.toUpperCase() : key;
             })
             .join(' + ');
 
-        // Update the shortcutsConfig state local to this component
-        if (showAddShortcutModal) {
-            setNewShortcutDetails(prevDetails => ({ ...prevDetails, keys: newKeys, display: newDisplay }));
-        }
-        setShortcutsConfig(prevConfig => {
-            if (!prevConfig) return null;
-            const updatedConfig = { ...prevConfig };
-            const categoryShortcuts = [...updatedConfig[listeningFor.category]];
-            categoryShortcuts[listeningFor.index] = {
-                ...categoryShortcuts[listeningFor.index],
-                keys: newKeys,
-                display: newDisplay,
-            };
-            updatedConfig[listeningFor.category] = categoryShortcuts;
-            return updatedConfig;
-        });
+        // Update the temporary modal state, not the main shortcutsConfig directly
+        setModalShortcutDetails(prevDetails => ({
+            ...prevDetails,
+            keys: newKeys,
+            display: newDisplay
+        }));
 
-        console.log(`Shortcut updated to: ${newDisplay}`);
+        console.log(`Shortcut captured for modal: ${newDisplay}`);
         setListeningFor(null); // Exit listening mode
         pressedKeysRef.current.clear(); // Clear pressed keys for the next capture
         if (debounceTimerRef.current) {
             clearTimeout(debounceTimerRef.current);
             debounceTimerRef.current = null;
         }
-    }, [listeningFor, setShortcutsConfig]);
+    }, [listeningFor, isShortcutModalOpen]);
 
-    // Handle click on shortcut display to start remapping
-    const handleStartRemap = (category: string, index: number) => {
-        if (!shortcutsConfig) {
-            console.warn('Error: Shortcuts not loaded yet.');
-            return;
-        }
-        if (!listeningFor) { // Only allow starting remap if not already listening
-            setListeningFor({ category, index });
-            pressedKeysRef.current.clear(); // Clear any previously pressed keys
-            // Set initial text for the overlay
-            if (listeningKeyRef.current) {
-                listeningKeyRef.current.innerText = 'Press new shortcut...';
-            }
-            console.log(`Listening for new shortcut for '${shortcutsConfig[category][index].keys.join(' + ')}'`);
-        }
-    };
-
-    // Helper to check if a key is a modifier
-    const isModifierKey = (key: string) => ['Control', 'Shift', 'Alt', 'Meta'].includes(key);
 
     // Keydown event handler for capturing input
     const handleCaptureKeyDown = useCallback((event: KeyboardEvent) => {
-        // Always prevent default and stop propagation when listening to avoid conflicts
+        // Only proceed if actively listening
+        if (!listeningFor) return;
+
+        // Prevent default and stop propagation to avoid conflicts with browser/app shortcuts
         event.preventDefault();
         event.stopPropagation();
 
-        if (!listeningFor) return;
-
-        // Add current key to the set of pressed keys
-        // Normalize key names for consistency (e.g., 'Control' instead of 'control')
-        const keyToAdd = event.key === ' ' ? 'Space' : event.key; // Handle spacebar explicitly
+        const keyToAdd = event.key === ' ' ? 'Space' : event.key;
         pressedKeysRef.current.add(keyToAdd);
 
-        console.log(`Pressed key: 11v ${0}`, pressedKeysRef.current);
         // Add modifier keys if they are currently active
-        // It's important to add 'Control', 'Shift', etc., as distinct keys, not just based on event.ctrlKey
         if (event.ctrlKey && !pressedKeysRef.current.has('Control')) pressedKeysRef.current.add('Control');
         if (event.shiftKey && !pressedKeysRef.current.has('Shift')) pressedKeysRef.current.add('Shift');
         if (event.altKey && !pressedKeysRef.current.has('Alt')) pressedKeysRef.current.add('Alt');
@@ -196,7 +165,7 @@ const ShortcutManagerScreen: React.FC = () => {
 
         // Update the display in the overlay in real-time
         const currentPressedDisplay = Array.from(pressedKeysRef.current)
-            .sort((a, b) => { // Sort modifiers first for consistent display
+            .sort((a, b) => {
                 const order: { [key: string]: number } = { 'Control': 1, 'Shift': 2, 'Alt': 3, 'Meta': 4 };
                 const valA = order[a] || 99;
                 const valB = order[b] || 99;
@@ -212,30 +181,26 @@ const ShortcutManagerScreen: React.FC = () => {
             })
             .join(' + ');
 
-        console.log("Current pressed keys:", currentPressedDisplay);
         if (listeningKeyRef.current) {
             listeningKeyRef.current.innerText = currentPressedDisplay || 'Press new shortcut...';
         }
 
         // Clear any previous debounce timer
         if (debounceTimerRef.current) {
-            console.log("Clearing debounce timer", currentPressedDisplay);
             clearTimeout(debounceTimerRef.current);
         }
 
-        // Set a new debounce timer. If this timer fires, it means the user has stopped pressing keys
-        // (or only pressed modifiers and nothing else followed), so finalize the shortcut.
+        // Set a new debounce timer to finalize the shortcut after a brief pause
         debounceTimerRef.current = setTimeout(() => {
-            console.log("Debounce timer fired, finalizing shortcut", currentPressedDisplay);
-            finalizeShortcut(pressedKeysRef.current);
+            finalizeShortcut();
         }, 500); // 500ms debounce delay
     }, [listeningFor, finalizeShortcut]);
 
 
-    // Attach/detach keydown and keyup listeners for capturing new shortcut
+    // Attach/detach keydown listeners for capturing new shortcut
     useEffect(() => {
         if (listeningFor) {
-            // Attach listeners in the capture phase to ensure they fire before other handlers
+            // Attach listeners in the capture phase
             window.addEventListener('keydown', handleCaptureKeyDown, true);
         } else {
             // Remove listeners when not listening
@@ -256,6 +221,7 @@ const ShortcutManagerScreen: React.FC = () => {
         };
     }, [listeningFor, handleCaptureKeyDown]);
 
+    // Handler to save changes to the backend
     const handleSaveChanges = async () => {
         if (!shortcutsConfig) {
             console.warn("No shortcuts configuration to save.");
@@ -283,37 +249,76 @@ const ShortcutManagerScreen: React.FC = () => {
             window.location.reload();
         } catch (error: any) {
             console.error("Error saving shortcuts:", error.message);
-            // setError(error);
+            // In a real app, you'd show a user-friendly error message here
         }
     };
 
+    // Handler for adding a new shortcut
     const handleAddShortcut = () => {
-        if (!addShortcutCategory || !shortcutsConfig) return;
+        if (!modalCategory || !shortcutsConfig) return;
 
-
-        console.log("Des ", newShortcutDetails, pressedKeysRef.current)
-        if (newShortcutDetails.description && !newShortcutDetails.description.trim() || !newShortcutDetails.keys || newShortcutDetails.keys.length === 0) {
-            console.warn('Description and Shortcut keys are required for new shortcut.');
+        // Basic validation
+        if (!modalShortcutDetails.description || modalShortcutDetails.description.trim() === '' ||
+            !modalShortcutDetails.keys || modalShortcutDetails.keys.length === 0 ||
+            !modalShortcutDetails.display || modalShortcutDetails.display.trim() === '') {
+            console.warn('Description, Shortcut keys, and Display are required for a new shortcut.');
+            // In a real app, you'd show a user-friendly error message here
             return;
         }
 
-        const newShortcut: Shortcut = { ...newShortcutDetails } as Shortcut;
+        const newShortcut: Shortcut = { ...modalShortcutDetails } as Shortcut;
 
         setShortcutsConfig(prevConfig => {
             if (!prevConfig) return null;
             const updatedConfig = { ...prevConfig };
-            const categoryShortcuts = updatedConfig[addShortcutCategory] ? [...updatedConfig[addShortcutCategory]] : [];
+            const categoryShortcuts = updatedConfig[modalCategory] ? [...updatedConfig[modalCategory]] : [];
             categoryShortcuts.push(newShortcut);
-            updatedConfig[addShortcutCategory] = categoryShortcuts;
+            updatedConfig[modalCategory] = categoryShortcuts;
             return updatedConfig;
         });
 
-        setShowAddShortcutModal(false);
-        setAddShortcutCategory(null);
+        setIsShortcutModalOpen(false);
+        setModalCategory(null);
+        setModalShortcutIndex(null);
+        setListeningFor(null);
+        pressedKeysRef.current.clear();
     };
+
+    // Handler for updating an existing shortcut
+    const handleUpdateShortcut = () => {
+        if (!modalCategory || modalShortcutIndex === null || !shortcutsConfig) return;
+
+        // Basic validation
+        if (!modalShortcutDetails.description || modalShortcutDetails.description.trim() === '' ||
+            !modalShortcutDetails.keys || modalShortcutDetails.keys.length === 0 ||
+            !modalShortcutDetails.display || modalShortcutDetails.display.trim() === '') {
+            console.warn('Description, Shortcut keys, and Display are required for updating a shortcut.');
+            // In a real app, you'd show a user-friendly error message here
+            return;
+        }
+
+        setShortcutsConfig(prevConfig => {
+            if (!prevConfig) return null;
+            const updatedConfig = { ...prevConfig };
+            const categoryShortcuts = [...updatedConfig[modalCategory]];
+            categoryShortcuts[modalShortcutIndex] = { ...modalShortcutDetails } as Shortcut;
+            updatedConfig[modalCategory] = categoryShortcuts;
+            return updatedConfig;
+        });
+
+        setIsShortcutModalOpen(false);
+        setModalCategory(null);
+        setModalShortcutIndex(null);
+        setListeningFor(null);
+        pressedKeysRef.current.clear();
+    };
+
+    // Open add shortcut modal
     const openAddShortcutModal = (category: string) => {
-        setAddShortcutCategory(category);
-        setNewShortcutDetails({
+        setModalMode('add');
+        setModalCategory(category);
+        setModalShortcutIndex(null); // No index for new shortcut
+        setModalShortcutDetails({ // Reset details for a new shortcut
             description: '',
             action: '',
             targetId: '',
@@ -321,13 +326,55 @@ const ShortcutManagerScreen: React.FC = () => {
             keys: [],
             display: ''
         });
-        setNewShortcutType('action'); // Default to action type
-        setShowAddShortcutModal(true);
-    };
-    const handleGoBack = () => {
-        router.back(); // Use Next.js router to go back
+        setIsShortcutModalOpen(true);
     };
 
+    // Open edit shortcut modal, pre-filling data
+    const openEditShortcutModal = (category: string, index: number, shortcut: Shortcut) => {
+        setModalMode('edit');
+        setModalCategory(category);
+        setModalShortcutIndex(index);
+        setModalShortcutDetails({ ...shortcut }); // Pre-fill with existing shortcut data
+        setIsShortcutModalOpen(true);
+    };
+
+    // Handle delete confirmation initiation
+    const handleDeleteConfirmation = (category: string, index?: number) => {
+        setDeleteTarget({ category, index });
+        setShowDeleteConfirmation(true);
+    };
+
+    // Execute delete action
+    const handleDelete = () => {
+        if (!deleteTarget || !shortcutsConfig) return;
+
+        setShortcutsConfig(prevConfig => {
+            if (!prevConfig) return null;
+            const updatedConfig = { ...prevConfig };
+
+            if (deleteTarget.index !== undefined) {
+                // Delete a specific shortcut
+                const categoryShortcuts = [...updatedConfig[deleteTarget.category]];
+                categoryShortcuts.splice(deleteTarget.index, 1);
+                updatedConfig[deleteTarget.category] = categoryShortcuts;
+            } else {
+                // Delete an entire category (if not global)
+                if (deleteTarget.category !== 'global') {
+                    delete updatedConfig[deleteTarget.category];
+                } else {
+                    console.warn("Cannot delete the 'global' category.");
+                }
+            }
+            return updatedConfig;
+        });
+        setShowDeleteConfirmation(false);
+        setDeleteTarget(null);
+    };
+
+    // Handle navigation back
+    const handleGoBack = () => {
+        window.history.back(); // Use window.history.back() for client-side navigation
+    };
 
     if (isLoading) {
         return <div className="text-center text-xl font-semibold text-gray-700">Loading shortcut manager...</div>;
@@ -338,50 +385,55 @@ const ShortcutManagerScreen: React.FC = () => {
     }
 
     return (
-        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200">
-            <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">Manage Keyboard Shortcuts</h2>
-            <p className="text-lg text-gray-700 text-center mb-8">
+        <div className="p-6 bg-white rounded-xl shadow-md border border-gray-200 font-sans">
+            <h2 className="text-3xl font-bold text-blue-600 mb-4">Manage Keyboard Shortcuts</h2>
+            <p className="text-md text-gray-700 mb-8">
                 Click on the current shortcut display to change it, then press the desired key combination.
             </p>
 
-
+            {/* Action Buttons: Go Back and Save Changes */}
             <div className="flex justify-between my-8">
                 <button
                     onClick={handleGoBack}
-                    className=" font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                    className="flex items-center bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                 >
                     <ArrowLeft className="h-4 w-4 mr-2" />
+                    Go Back
                 </button>
                 <button
                     onClick={handleSaveChanges}
-                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                    className="flex items-center bg-green-500 hover:bg-green-600 cursor-pointer text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
                     disabled={!!listeningFor} // Disable if listening for shortcut
                 >
-                    <HardDriveUpload  className="h-6 w-6 " />
+                    <HardDriveUpload className="h-5 w-5 mr-2" />
+                    Save Changes
                 </button>
             </div>
 
+            {/* Shortcut Categories Section */}
             {shortcutsConfig && Object.entries(shortcutsConfig).map(([category, shortcuts]) => (
                 <div key={category} className="mb-8 last:mb-0">
-                    <div className="flex justify-between mb-4 border-b pb-2  text-gray-700  border-gray-300">
+                    <div className="flex justify-between items-center mb-4 border-b pb-2 text-gray-700 border-gray-300">
                         <h3 className="text-2xl font-semibold capitalize">
                             {category.replace('/', '')} Shortcuts
                         </h3>
                         <div className="flex gap-2 justify-end">
+                            {/* Add New Shortcut Button */}
                             <button
                                 onClick={() => openAddShortcutModal(category)}
-                                className="bg-blue-400 hover:bg-blue-500 p-3 text-white text-sm  rounded-md transition duration-150"
+                                className="bg-blue-400 hover:bg-blue-500 px-3 py-2  text-white rounded-md transition duration-150 flex items-center gap-1"
                             >
-                                <CopyPlus className=" h-4 w-4" />
+                                <CopyPlus className="h-4 w-4" /> 
                             </button>
-                            {/* {category !== 'global' && ( // Cannot delete global category
+                            {/* Delete Category Button (hidden for 'global' category) */}
+                            {category !== 'global' && (
                                 <button
-                                    // onClick={() => handleDeleteConfirmation(category)}
-                                    className="bg-red-500 hover:bg-red-600 text-white text-sm py-1.5 px-3 rounded-md transition duration-150"
+                                    onClick={() => handleDeleteConfirmation(category)}
+                                    className="bg-red-400 hover:bg-red-500  px-3 py-2 text-white rounded-md transition duration-150 flex items-center gap-1"
                                 >
-                                    Delete Category
+                                    <Trash className="h-4 w-4" />
                                 </button>
-                            )} */}
+                            )}
                         </div>
                     </div>
                     <div className="overflow-x-auto">
@@ -389,47 +441,59 @@ const ShortcutManagerScreen: React.FC = () => {
                             <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                                 <thead>
                                     <tr className="bg-gray-100 border-b">
-                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action</th>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action/Target</th>
                                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Current Shortcut</th>
                                         <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
-                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Edit/Delete</th>
+                                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {shortcuts.map((s, index) => (
                                         <tr key={`${category}-${index}`} className="border-b last:border-b-0 hover:bg-gray-50">
                                             <td className="px-4 py-3 text-base text-gray-800">
-                                                {s.action ? s.action.replace(/([A-Z])/g, ' $1') : `#${s.targetId} ${s.targetAction}`}
+                                                {s.action ? s.action.replace(/([A-Z])/g, ' $1').trim() : `#${s.targetId} ${s.targetAction}`}
                                             </td>
                                             <td className="px-4 py-3 cursor-pointer"
-                                                onClick={() => handleStartRemap(category, index)}
-                                                title={!listeningFor ? "Click to change" : "Press keys now"}
+                                                onClick={() => {
+                                                    // Only allow changing shortcut if not currently listening
+                                                    if (!listeningFor) {
+                                                        // This starts the key capture process without opening a modal
+                                                        // It will update the s.display in the table directly when finalized
+                                                        setListeningFor({ category, index });
+                                                        pressedKeysRef.current.clear();
+                                                        if (listeningKeyRef.current) {
+                                                            listeningKeyRef.current.innerText = 'Press new shortcut...';
+                                                        }
+                                                    }
+                                                }}
+                                                title={!listeningFor ? "Click to change shortcut combination" : "Press keys now"}
                                             >
                                                 {listeningFor && listeningFor.category === category && listeningFor.index === index ? (
-                                                    <div ref={listeningKeyRef} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-bold animate-pulse inline-block min-w-[90px] text-center">
+                                                    <div ref={listeningKeyRef} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-bold animate-pulse inline-block min-w-[120px] text-center">
                                                         listening...
                                                     </div>
                                                 ) : (
-                                                    <div className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-bold inline-block min-w-[90px] text-center">
-                                                        {s.display} {/* Use s.display as it's the formatted string */}
+                                                    <div className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm font-bold inline-block min-w-[120px] text-center">
+                                                        {s.display}
                                                     </div>
                                                 )}
                                             </td>
                                             <td className="px-4 py-3 text-gray-700">{s.description}</td>
                                             <td className="px-4 py-3 text-right">
-                                                {/* Removed the Change button as requested */}
-                                            </td>
-                                            <td className="px-4 py-3 text-right">
                                                 <div className="flex justify-end gap-2">
+                                                    {/* Edit Shortcut Button */}
                                                     <button
-                                                        // onClick={() => openEditShortcutModal(category, index, s)}
-                                                        className="bg-gray-200 hover:bg-gray-300  cursor-pointer text-sm py-1 px-2 rounded-sm transition duration-150"
+                                                        onClick={() => openEditShortcutModal(category, index, s)}
+                                                        className="bg-gray-200 hover:bg-gray-300 p-2 text-gray-800 rounded-sm transition duration-150"
+                                                        title="Edit shortcut details"
                                                     >
                                                         <Edit className="h-4 w-4" />
                                                     </button>
+                                                    {/* Delete Specific Shortcut Button */}
                                                     <button
-                                                        // onClick={() => handleDeleteConfirmation(category, index)}
-                                                        className="bg-red-200 hover:bg-red-300 cursor-pointer text-sm py-1 px-2 rounded-sm transition duration-150"
+                                                        onClick={() => handleDeleteConfirmation(category, index)}
+                                                        className="bg-red-200 hover:bg-red-300 p-2 text-red-800 rounded-sm transition duration-150"
+                                                        title="Delete this shortcut"
                                                     >
                                                         <Trash className="h-4 w-4" />
                                                     </button>
@@ -440,111 +504,190 @@ const ShortcutManagerScreen: React.FC = () => {
                                 </tbody>
                             </table>
                         ) : (
-                            <p className="text-gray-700 text-center">No shortcuts found for this category.</p>
-                        )
-                        }
+                            <p className="text-gray-700 text-center py-4">No shortcuts found for this category. Click "Add Shortcut" to create one.</p>
+                        )}
                     </div>
                     <div className="border-t border-gray-400 my-10 border-dashed" />
                 </div>
             ))}
 
-            <Dialog open={showAddShortcutModal} onOpenChange={(open) => {
-                setShowAddShortcutModal(open);
-                if (!open) { // If closing the modal
-                    // setIsListeningForShortcut(false);
+            {/* Add/Edit Shortcut Modal */}
+            <Dialog open={isShortcutModalOpen} onOpenChange={(open: boolean) => {
+                setIsShortcutModalOpen(open);
+                if (!open) { // If closing the modal, reset listening state and pressed keys
                     setListeningFor(null);
                     pressedKeysRef.current.clear();
+                    if (debounceTimerRef.current) {
+                        clearTimeout(debounceTimerRef.current);
+                        debounceTimerRef.current = null;
+                    }
                 }
             }}>
-                <DialogContent className="sm:max-w-[500px]">
-                    <AlertDialogHeader>
-                        <DialogTitle>Add New Shortcut to "{addShortcutCategory}"</DialogTitle>
+                <DialogContent className="sm:max-w-[500px] p-6 bg-white rounded-lg shadow-lg">
+                    <AlertDialogHeader className="mb-4">
+                        <DialogTitle className="text-xl font-semibold text-gray-800">
+                            {modalMode === 'add' ? `Add New Shortcut to "${modalCategory}"` : `Edit Shortcut in "${modalCategory}"`}
+                        </DialogTitle>
                     </AlertDialogHeader>
                     <div className="grid gap-4 py-4">
+                        {/* Description Input */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Description</label>
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                             <input
+                                id="description"
                                 type="text"
-                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
-                                value={newShortcutDetails.description}
-                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, description: e.target.value }))}
+                                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                value={modalShortcutDetails.description || ''}
+                                onChange={(e) => setModalShortcutDetails(prev => ({ ...prev, description: e.target.value }))}
                                 placeholder="e.g., Quick Add Item"
                             />
                         </div>
 
+                        {/* Shortcut Keys Input/Capture */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700">Shortcut Keys</label>
+                            <label htmlFor="shortcutKeys" className="block text-sm font-medium text-gray-700 mb-1">Shortcut Keys</label>
                             <div
+                                id="shortcutKeys"
                                 ref={listeningKeyRef}
-                                className={`mt-1 p-2 border rounded-md cursor-pointer text-center font-bold ${listeningFor && listeningFor.category === addShortcutCategory && listeningFor.index === -1 ? 'bg-yellow-100 text-yellow-800 animate-pulse' : 'bg-gray-100 text-gray-800'}`}
+                                className={`mt-1 p-2 border rounded-md cursor-pointer text-center font-bold min-h-[40px] flex items-center justify-center
+                                    ${listeningFor && listeningFor.category === modalCategory && listeningFor.index === modalShortcutIndex ? 'bg-yellow-100 text-yellow-800 animate-pulse border-yellow-400' : 'bg-gray-100 text-gray-800 border-gray-300'}`}
                                 onClick={() => {
-                                    if (!listeningFor) {
-                                        setListeningFor({ category: addShortcutCategory!, index: -1 });
+                                    if (!listeningFor) { // Only start listening if not already
+                                        setListeningFor({ category: modalCategory!, index: modalMode === 'add' ? -1 : modalShortcutIndex! });
                                         pressedKeysRef.current.clear();
                                         if (listeningKeyRef.current) {
                                             listeningKeyRef.current.innerText = 'Press new shortcut...';
                                         }
-                                        // setIsListeningForShortcut(true);
                                     }
                                 }}
-                                title={!listeningFor ? "Click to set shortcut" : "Press keys now"}
+                                title={!listeningFor ? "Click to set shortcut (press combination of keys)" : "Press keys now"}
                             >
-                                {listeningFor && listeningFor.category === addShortcutCategory && listeningFor.index === -1 || listeningKeyRef.current?.innerText ? (
+                                {listeningFor && listeningFor.category === modalCategory && listeningFor.index === modalShortcutIndex ? (
                                     listeningKeyRef.current?.innerText || 'listening...'
                                 ) : (
-                                    newShortcutDetails.display || 'Click to set shortcut (e.g., Ctrl + Enter)'
+                                    modalShortcutDetails.display || 'Click to set shortcut (e.g., Ctrl + Enter)'
                                 )}
                             </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Action Name</label>
-                            <input
-                                type="text"
-                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
-                                value={newShortcutDetails.action || ''}
-                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, action: e.target.value }))}
-                                placeholder="e.g., addItem"
-                            />
-                            <label className="block text-sm font-medium text-gray-700">Target ID</label>
-                            <input
-                                type="text"
-                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
-                                value={newShortcutDetails.targetId || ''}
-                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, targetId: e.target.value }))}
-                                placeholder="e.g., myButtonId"
-                            />
+
+                        {/* Action/Target Type Toggle (Optional, based on how you want to handle these fields) */}
+                        <div className="flex items-center gap-4 mt-2">
+                            <label className="text-sm font-medium text-gray-700">Type:</label>
+                            <div className="flex gap-2">
+                                <label className="inline-flex items-center">
+                                    <input
+                                        type="radio"
+                                        className="form-radio text-blue-600"
+                                        name="shortcutType"
+                                        value="action"
+                                        checked={!!modalShortcutDetails.action}
+                                        onChange={() => setModalShortcutDetails(prev => ({ ...prev, action: prev.action || '', targetId: '', targetAction: '' }))}
+                                    />
+                                    <span className="ml-2 text-gray-700">Action</span>
+                                </label>
+                                <label className="inline-flex items-center">
+                                    <input
+                                        type="radio"
+                                        className="form-radio text-blue-600"
+                                        name="shortcutType"
+                                        value="target"
+                                        checked={!!modalShortcutDetails.targetId || !!modalShortcutDetails.targetAction}
+                                        onChange={() => setModalShortcutDetails(prev => ({ ...prev, targetId: prev.targetId || '', targetAction: prev.targetAction || '', action: '' }))}
+                                    />
+                                    <span className="ml-2 text-gray-700">Target Element</span>
+                                </label>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700">Target Action</label>
-                            <input
-                                type="text"
-                                className="mt-1 w-full p-2 border border-gray-300 rounded-md"
-                                value={newShortcutDetails.targetAction || ''}
-                                onChange={(e) => setNewShortcutDetails(prev => ({ ...prev, targetAction: e.target.value }))}
-                                placeholder="e.g., click or focus"
-                            />
-                        </div>
+
+
+                        {/* Conditional Inputs based on type */}
+                        {modalShortcutDetails.action !== undefined && (
+                            <div>
+                                <label htmlFor="actionName" className="block text-sm font-medium text-gray-700 mb-1">Action Name</label>
+                                <input
+                                    id="actionName"
+                                    type="text"
+                                    className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                    value={modalShortcutDetails.action || ''}
+                                    onChange={(e) => setModalShortcutDetails(prev => ({ ...prev, action: e.target.value }))}
+                                    placeholder="e.g., addItem, saveForm"
+                                />
+                            </div>
+                        )}
+
+                        {(modalShortcutDetails.targetId !== undefined || modalShortcutDetails.targetAction !== undefined) && (
+                            <>
+                                <div>
+                                    <label htmlFor="targetId" className="block text-sm font-medium text-gray-700 mb-1">Target ID</label>
+                                    <input
+                                        id="targetId"
+                                        type="text"
+                                        className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        value={modalShortcutDetails.targetId || ''}
+                                        onChange={(e) => setModalShortcutDetails(prev => ({ ...prev, targetId: e.target.value }))}
+                                        placeholder="e.g., myButtonId, inputField"
+                                    />
+                                </div>
+                                <div>
+                                    <label htmlFor="targetAction" className="block text-sm font-medium text-gray-700 mb-1">Target Action</label>
+                                    <input
+                                        id="targetAction"
+                                        type="text"
+                                        className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                                        value={modalShortcutDetails.targetAction || ''}
+                                        onChange={(e) => setModalShortcutDetails(prev => ({ ...prev, targetAction: e.target.value }))}
+                                        placeholder="e.g., click, focus, submit"
+                                    />
+                                </div>
+                            </>
+                        )}
                     </div>
 
-                    <div className="flex justify-end gap-2">
+                    {/* Modal Action Buttons */}
+                    <div className="flex justify-end gap-2 mt-6">
                         <button
                             type="button"
-                            className="inline-flex justify-center rounded-md border border-transparent bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2"
-                            onClick={() => {
-                                setShowAddShortcutModal(false);
-                                //  setIsListeningForShortcut(false);
-                                setListeningFor(null); pressedKeysRef.current.clear();
-                            }}
+                            className="inline-flex justify-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors duration-200"
+                            onClick={() => setIsShortcutModalOpen(false)}
                         >
                             Cancel
                         </button>
                         <button
                             type="button"
-                            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                            onClick={handleAddShortcut}
-                            disabled={!!listeningFor}
+                            className="inline-flex justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 transition-colors duration-200"
+                            onClick={modalMode === 'add' ? handleAddShortcut : handleUpdateShortcut}
+                            disabled={!!listeningFor} // Disable if listening for shortcut
                         >
-                            Add Shortcut
+                            {modalMode === 'add' ? 'Add Shortcut' : 'Update Shortcut'}
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete Confirmation Modal */}
+            <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
+                <DialogContent className="sm:max-w-[425px] p-6 bg-white rounded-lg shadow-lg">
+                    <AlertDialogHeader className="mb-4">
+                        <DialogTitle className="text-xl font-semibold text-red-600">Confirm Deletion</DialogTitle>
+                    </AlertDialogHeader>
+                    <p className="text-gray-700 mb-6">
+                        Are you sure you want to delete {deleteTarget?.index !== undefined ? 'this shortcut' : 'this category'}?
+                        This action cannot be undone.
+                    </p>
+                    <div className="flex justify-end gap-2 mt-6">
+                        <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors duration-200"
+                            onClick={() => setShowDeleteConfirmation(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 transition-colors duration-200"
+                            onClick={handleDelete}
+                        >
+                            Delete
                         </button>
                     </div>
                 </DialogContent>
