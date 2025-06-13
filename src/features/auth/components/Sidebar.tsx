@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 
 // Define navigation item type
 type NavItem = {
+  id: string;
   label: string;
   href: string;
   icon: React.ReactNode;
@@ -53,37 +54,44 @@ export function Sidebar() {
       name: "Operations",
       items: [
         {
+          id: "goDashboard",
           label: "Dashboard",
           href: "/dashboard",
           icon: <LayoutDashboard className="h-5 w-5" />,
         },
         {
+          id: "goTables",
           label: "Tables",
           href: "/tables",
           icon: <Utensils className="h-5 w-5" />,
         },
         {
+          id: "goMenuManagement",
           label: "Menu Management",
           href: "/menu-management",
           icon: <MenuSquare className="h-5 w-5" />,
         },
         {
+          id: "goMenuQR",
           label: "Menu QR Code",
           href: "/menu-qr",
           icon: <QrCode className="h-5 w-5" />,
         },
         {
+          id: "goOrders",
           label: "Orders",
           href: "/orders",
           icon: <ClipboardList className="h-5 w-5" />,
         },
         {
+          id: "goPayments",
           label: "Payments",
           href: "/payments",
           icon: <CreditCard className="h-5 w-5" />,
           roles: ["admin", "manager"],
         },
         {
+          id: "goKitchen",
           label: "Kitchen",
           href: "/kitchen",
           icon: <ChefHat className="h-5 w-5" />,
@@ -94,18 +102,21 @@ export function Sidebar() {
       name: "Management",
       items: [
         {
+          id: "goReports",
           label: "Reports",
           href: "/reports",
           icon: <BarChart className="h-5 w-5" />,
           roles: ["admin", "manager"],
         },
         {
+          id: "goAnalytics",
           label: "Analytics",
           href: "/analytics",
           icon: <BarChart className="h-5 w-5" />,
           roles: ["admin"],
         },
         {
+          id: "goUsers",
           label: "Users",
           href: "/users",
           icon: <Users className="h-5 w-5" />,
@@ -117,6 +128,7 @@ export function Sidebar() {
       name: "System",
       items: [
         {
+          id: "goSettings",
           label: "Settings",
           href: "/settings",
           icon: <Settings className="h-5 w-5" />,
@@ -180,6 +192,7 @@ export function Sidebar() {
                     return (
                       <li key={item.href}>
                         <Link
+                          id={item.id}
                           href={item.href}
                           className={cn(
                             "flex items-center px-2 py-2 text-sm rounded-md group",

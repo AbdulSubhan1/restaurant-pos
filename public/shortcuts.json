@@ -2,101 +2,23 @@
   "global": [
     {
       "keys": [
-        "Control",
-        "n"
+        "Alt",
+        "P"
       ],
-      "display": "Ctrl + N",
-      "targetId": "newOrderBtn",
-      "targetAction": "click"
+      "display": "Alt + P",
+      "targetId": "goPayments",
+      "targetAction": "click",
+      "description": "Navigates to payments page by clicking 'goPayments'."
     },
     {
       "keys": [
-        "F2"
+        "Alt",
+        "O"
       ],
-      "display": "F2",
-      "targetId": "main11",
-      "targetAction": "click"
-    },
-    {
-      "action": "search",
-      "keys": [
-        "F3"
-      ],
-      "display": "F3"
-    },
-    {
-      "action": "printBill",
-      "keys": [
-        "Control",
-        "p"
-      ],
-      "display": "Ctrl + P"
-    },
-    {
-      "keys": [
-        "F10"
-      ],
-      "display": "F10",
-      "targetId": "finalizeSaleBtn",
-      "targetAction": "click"
-    },
-    {
-      "keys": [
-        "Control",
-        "Enter"
-      ],
-      "display": "Ctrl + Enter",
-      "targetId": "finalizeSaleBtn",
-      "targetAction": "click"
-    },
-    {
-      "keys": [
-        "Escape"
-      ],
-      "display": "Esc",
-      "targetId": "goGlobalBtn",
-      "targetAction": "click"
-    }
-  ],
-  "/payments": [
-    {
-      "keys": [
-        "Control",
-        "f"
-      ],
-      "display": "F2",
-      "targetId": "search",
-      "targetAction": "focus"
-    },
-    {
-      "keys": [
-        "Control",
-        "Enter"
-      ],
-      "display": "Ctrl + Enter",
-      "targetId": "search",
-      "targetAction": "focus"
-    },
-    {
-      "action": "increaseQuantity",
-      "keys": [
-        "+"
-      ],
-      "display": "+"
-    },
-    {
-      "action": "decreaseQuantity",
-      "keys": [
-        "-"
-      ],
-      "display": "-"
-    },
-    {
-      "action": "removeItem",
-      "keys": [
-        "Delete"
-      ],
-      "display": "Del"
+      "display": "Alt + O",
+      "targetId": "goOrders",
+      "targetAction": "click",
+      "description": "Navigates to orders page by clicking 'goOrders'."
     }
   ],
   "/orders": [
@@ -108,7 +30,8 @@
       ],
       "display": "Ctrl + F",
       "targetId": "orderSearchBar",
-      "targetAction": "focus"
+      "targetAction": "focus",
+      "description": "Focuses the order search input field."
     },
     {
       "action": "newOrder",
@@ -117,7 +40,8 @@
       ],
       "display": "Ctrl + N",
       "targetId": "newOrderModalOpenBtn",
-      "targetAction": "click"
+      "targetAction": "click",
+      "description": "Opens the new order modal by clicking 'newOrderModalOpenBtn'. (Display text may be misleading)"
     }
   ]
 }

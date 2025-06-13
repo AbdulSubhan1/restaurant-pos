@@ -31,36 +31,43 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
   const navigationItems = [
     // Operations
     {
+      id: "goDashboard",
       label: "Dashboard",
       href: "/dashboard",
       icon: <LayoutDashboard className="h-5 w-5" />,
     },
     {
+      id: "goTables",
       label: "Tables",
       href: "/tables",
       icon: <Utensils className="h-5 w-5" />,
     },
     {
+      id: "goMenuManagement",
       label: "Menu Management",
       href: "/menu-management",
       icon: <MenuSquare className="h-5 w-5" />,
     },
     {
+      id: "goMenuQR",
       label: "Menu QR Code",
       href: "/menu-qr",
       icon: <QrCode className="h-5 w-5" />,
     },
     {
+      id: "goOrders",
       label: "Orders",
       href: "/orders",
       icon: <ClipboardList className="h-5 w-5" />,
     },
     {
+      id: "goPayments",
       label: "Payments",
       href: "/payments",
       icon: <CreditCard className="h-5 w-5" />,
     },
     {
+      id: "goKitchen",
       label: "Kitchen",
       href: "/kitchen",
       icon: <ChefHat className="h-5 w-5" />,
@@ -68,18 +75,21 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
     // Management (role-based)
     {
+      id: "goReports",
       label: "Reports",
       href: "/reports",
       icon: <BarChart className="h-5 w-5" />,
       roles: ["admin", "manager"],
     },
     {
+      id: "goAnalytics",
       label: "Analytics",
       href: "/analytics",
       icon: <BarChart className="h-5 w-5" />,
       roles: ["admin", "manager"],
     },
     {
+      id: "goUsers",
       label: "Users",
       href: "/users",
       icon: <Users className="h-5 w-5" />,
@@ -88,6 +98,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
     // System (role-based)
     {
+      id: "goSettings",
       label: "Settings",
       href: "/settings",
       icon: <Settings className="h-5 w-5" />,
@@ -135,6 +146,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
 
               return (
                 <Link
+                  id={item?.id}
                   key={item.href}
                   href={item.href}
                   className={cn(

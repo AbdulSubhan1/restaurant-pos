@@ -200,66 +200,7 @@ const ShortcutManagerScreen: React.FC = () => {
         debounceTimerRef.current = setTimeout(() => {
             console.log("Debounce timer fired, finalizing shortcut", currentPressedDisplay);
             finalizeShortcut(pressedKeysRef.current);
-        }, 5000); // 500ms debounce delay
-    }, [listeningFor, finalizeShortcut]);
-
-    // Keyup event handler for capturing input
-    const handleCaptureKeyUp = useCallback((event: KeyboardEvent) => {
-        if (!listeningFor) return;
-
-        // Remove the specific key that was just released from the set
-        const keyToRemove = event.key === ' ' ? 'Space' : event.key;
-        const wasNonModifierReleased = !isModifierKey(keyToRemove);
-
-        pressedKeysRef.current.delete(keyToRemove);
-
-        // Update the display in the overlay in real-time after keyup
-        const currentPressedDisplay = Array.from(pressedKeysRef.current)
-            .sort((a, b) => {
-                const order: { [key: string]: number } = { 'Control': 1, 'Shift': 2, 'Alt': 3, 'Meta': 4 };
-                const valA = order[a] || 99;
-                const valB = order[b] || 99;
-                if (valA !== valB) return valA - valB;
-                return a.localeCompare(b);
-            })
-            .map(key => {
-                if (key === 'Control') return 'Ctrl';
-                if (key === 'Shift') return 'Shift';
-                if (key === 'Alt') return 'Alt';
-                if (key === 'Meta') return 'Meta';
-                return key.length === 1 ? key.toUpperCase() : key;
-            })
-            .join(' + ');
-
-        if (listeningKeyRef.current) {
-            listeningKeyRef.current.innerText = currentPressedDisplay || 'Press new shortcut...';
-        }
-
-        // If all keys are released (set becomes empty), finalize the shortcut immediately.
-        if (pressedKeysRef.current.size === 0) {
-            if (debounceTimerRef.current) {
-                clearTimeout(debounceTimerRef.current);
-                debounceTimerRef.current = null;
-            }
-            finalizeShortcut();
-            return; // Finalized, no need to proceed
-        }
-
-        // If a non-modifier key was just released, AND there are no other non-modifier keys currently pressed
-        // (meaning only modifiers might still be down, or no keys at all). This signals the end of a combination
-        // that included a non-modifier key.
-        if (wasNonModifierReleased) {
-            const hasOtherNonModifierKeysRemaining = Array.from(pressedKeysRef.current).some(key => !isModifierKey(key));
-            if (!hasOtherNonModifierKeysRemaining) {
-                // Only modifiers are left, or no keys at all
-                if (debounceTimerRef.current) {
-                    clearTimeout(debounceTimerRef.current);
-                    debounceTimerRef.current = null;
-                }
-                finalizeShortcut();
-                return;
-            }
-        }
+        }, 500); // 500ms debounce delay
     }, [listeningFor, finalizeShortcut]);
 
 
@@ -268,11 +209,9 @@ const ShortcutManagerScreen: React.FC = () => {
         if (listeningFor) {
             // Attach listeners in the capture phase to ensure they fire before other handlers
             window.addEventListener('keydown', handleCaptureKeyDown, true);
-            window.addEventListener('keyup', handleCaptureKeyUp, true);
         } else {
             // Remove listeners when not listening
             window.removeEventListener('keydown', handleCaptureKeyDown, true);
-            window.removeEventListener('keyup', handleCaptureKeyUp, true);
             // Ensure debounce timer is cleared and pressed keys are reset if exiting listening mode
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
@@ -283,12 +222,11 @@ const ShortcutManagerScreen: React.FC = () => {
         return () => {
             // Cleanup on component unmount
             window.removeEventListener('keydown', handleCaptureKeyDown, true);
-            window.removeEventListener('keyup', handleCaptureKeyUp, true);
             if (debounceTimerRef.current) {
                 clearTimeout(debounceTimerRef.current);
             }
         };
-    }, [listeningFor, handleCaptureKeyDown, handleCaptureKeyUp]);
+    }, [listeningFor, handleCaptureKeyDown]);
 
     const handleSaveChanges = () => {
         // In a real application, you would send `shortcutsConfig` to your backend here
@@ -317,19 +255,6 @@ const ShortcutManagerScreen: React.FC = () => {
                 Click on the current shortcut display to change it, then press the desired key combination.
             </p>
 
-            {listeningFor && (
-                <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-                    <div
-                        ref={listeningKeyRef}
-                        tabIndex={-1} // Make it focusable programmatically
-                        className="bg-white p-8 rounded-lg shadow-xl text-center text-gray-800 text-2xl font-bold animate-pulse focus:outline-none focus:ring-4 focus:ring-blue-400"
-                        style={{ minWidth: '300px', minHeight: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                    >
-                        Press new shortcut... {/* Initial text updated by handleCaptureKeyDown */}
-                    </div>
-                </div>
-            )}
-
             {shortcutsConfig && Object.entries(shortcutsConfig).map(([category, shortcuts]) => (
                 <div key={category} className="mb-8 last:mb-0">
                     <h3 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2 border-gray-300 capitalize">
@@ -356,7 +281,7 @@ const ShortcutManagerScreen: React.FC = () => {
                                             title={!listeningFor ? "Click to change" : "Press keys now"}
                                         >
                                             {listeningFor && listeningFor.category === category && listeningFor.index === index ? (
-                                                <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-bold animate-pulse inline-block min-w-[90px] text-center">
+                                                <div ref={listeningKeyRef} className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm font-bold animate-pulse inline-block min-w-[90px] text-center">
                                                     listening...
                                                 </div>
                                             ) : (
