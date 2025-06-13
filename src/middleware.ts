@@ -23,6 +23,7 @@ const roleBasedRoutes: Record<string, string[]> = {
     "/profile",
     "/analytics",
     "/test",
+    "/shortcuts",
   ],
   manager: [
     "/dashboard",

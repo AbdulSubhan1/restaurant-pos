@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Settings,
   QrCode,
+  SquareSlash,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -132,6 +133,13 @@ export function Sidebar() {
           label: "Settings",
           href: "/settings",
           icon: <Settings className="h-5 w-5" />,
+          roles: ["admin"],
+        },
+        {
+          id: "goShortcuts",
+          label: "Shortcuts",
+          href: "/shortcuts",
+          icon: <SquareSlash  className="h-5 w-5" />,
           roles: ["admin"],
         },
       ],
