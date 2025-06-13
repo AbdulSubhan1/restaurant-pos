@@ -58,9 +58,10 @@ export async function GET() {
  * Handles POST requests to save (update) shortcuts.json
  */
 export async function POST(request: Request) {
+  console.log("json in text", JSON.stringify(request))
   try {
     const updatedConfig: ShortcutsConfig = await request.json();
-
+    
     // Validate incoming data (basic validation for demonstration)
     if (!updatedConfig || typeof updatedConfig !== "object") {
       return NextResponse.json(
@@ -69,6 +70,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Ensure the file exists before attempting to write
+    if (!fs.existsSync(SHORTCUTS_FILE_PATH)) {
+      console.warn("shortcuts.json not found, creating new file.");
+      // If the file doesn't exist, create it
+      fs.writeFileSync(SHORTCUTS_FILE_PATH, "{}", "utf8");
+    }
     // Write the updated configuration to the file
     fs.writeFileSync(
       SHORTCUTS_FILE_PATH,

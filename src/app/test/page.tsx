@@ -61,11 +61,11 @@ const ShortcutManagerScreen: React.FC = () => {
     }, [listeningFor]);
 
     // Function to finalize the captured shortcut
-    const finalizeShortcut = useCallback((list?:any) => {
+    const finalizeShortcut = useCallback((list?: any) => {
         if (!listeningFor) return; // Should only run if actively listening
 
-        console.log(list , " lisstt")
-        console.log("pressed keys",pressedKeysRef.current)
+        console.log(list, " lisstt")
+        console.log("pressed keys", pressedKeysRef.current)
         // Get the captured keys, normalize, and sort for consistent representation
         const newKeys = Array.from(pressedKeysRef.current).sort((a, b) => {
             // Define an order for modifier keys to keep them consistent (Ctrl, Shift, Alt, Meta)
@@ -158,7 +158,7 @@ const ShortcutManagerScreen: React.FC = () => {
         const keyToAdd = event.key === ' ' ? 'Space' : event.key; // Handle spacebar explicitly
         pressedKeysRef.current.add(keyToAdd);
 
-        console.log(`Pressed key: 11v ${0}`,pressedKeysRef.current);
+        console.log(`Pressed key: 11v ${0}`, pressedKeysRef.current);
         // Add modifier keys if they are currently active
         // It's important to add 'Control', 'Shift', etc., as distinct keys, not just based on event.ctrlKey
         if (event.ctrlKey && !pressedKeysRef.current.has('Control')) pressedKeysRef.current.add('Control');
@@ -228,11 +228,35 @@ const ShortcutManagerScreen: React.FC = () => {
         };
     }, [listeningFor, handleCaptureKeyDown]);
 
-    const handleSaveChanges = () => {
-        // In a real application, you would send `shortcutsConfig` to your backend here
-        // e.g., fetch('/api/save-shortcuts', { method: 'POST', body: JSON.stringify(shortcutsConfig) });
-        console.log("Saving changes (in a real app, this would send to server):", shortcutsConfig);
-        console.log('Changes saved (to console)! Note: For changes to apply globally, the main app/hook might need to re-fetch or be notified via global state.');
+    const handleSaveChanges = async () => {
+        if (!shortcutsConfig) {
+            console.warn("No shortcuts configuration to save.");
+            return;
+        }
+
+        try {
+            console.log("Attempting to save changes to /api/shortcuts:", shortcutsConfig);
+            const response = await fetch('/api/shortcuts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(shortcutsConfig),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`Failed to save shortcuts: ${errorData.message || response.statusText}`);
+            }
+
+            const result = await response.json();
+            console.log("Save successful:", result.message);
+            // Force a reload to pick up changes in useKeyboardShortcuts hook in page.tsx
+            // window.location.reload();
+        } catch (error: any) {
+            console.error("Error saving shortcuts:", error.message);
+            // setError(error);
+        }
     };
 
     const handleGoBack = () => {
@@ -267,7 +291,6 @@ const ShortcutManagerScreen: React.FC = () => {
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action/Target</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Current Shortcut</th>
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Description</th>
-                                    <th className="px-4 py-2 text-right text-sm font-medium text-gray-600"></th> {/* Empty header for actions column */}
                                 </tr>
                             </thead>
                             <tbody>

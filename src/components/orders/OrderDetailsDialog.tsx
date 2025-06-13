@@ -192,13 +192,12 @@ export default function OrderDetailsDialog({
                     order.status !== "paid" &&
                     order.status !== "cancelled" && (
                       <span
-                        className={`text-xs ${
-                          item.status === "pending"
+                        className={`text-xs ${item.status === "pending"
                             ? "text-yellow-600"
                             : item.status === "in-progress"
-                            ? "text-blue-600"
-                            : "text-green-600"
-                        }`}
+                              ? "text-blue-600"
+                              : "text-green-600"
+                          }`}
                       >
                         {getStatusDisplay(item.status)}
                       </span>
@@ -261,6 +260,7 @@ export default function OrderDetailsDialog({
 
               {order.status !== "paid" && order.status !== "cancelled" && (
                 <Button
+                  id="processOrder"
                   onClick={handleProcessPayment}
                   variant="outline"
                   className="w-full mt-2"
@@ -271,6 +271,7 @@ export default function OrderDetailsDialog({
 
               {order.status !== "cancelled" && order.status !== "paid" && (
                 <Button
+                  id="cancelOrder"
                   variant="outline"
                   onClick={() => handleStatusChange("cancelled")}
                   className="w-full text-red-500 hover:text-red-600"

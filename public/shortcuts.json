@@ -3,9 +3,9 @@
     {
       "keys": [
         "Alt",
-        "P"
+        "w"
       ],
-      "display": "Alt + P",
+      "display": "Alt + W",
       "targetId": "goPayments",
       "targetAction": "click",
       "description": "Navigates to payments page by clicking 'goPayments'."
@@ -19,6 +19,26 @@
       "targetId": "goOrders",
       "targetAction": "click",
       "description": "Navigates to orders page by clicking 'goOrders'."
+    },
+    {
+      "keys": [
+        "Control",
+        "p"
+      ],
+      "display": "Ctrl + P",
+      "targetId": "print",
+      "targetAction": "click",
+      "description": "Prints the current page by clicking 'print'."
+    },
+    {
+      "keys": [
+        "Control",
+        "j"
+      ],
+      "display": "Ctrl + J",
+      "targetId": "downloadRecipt",
+      "targetAction": "click",
+      "description": "donwload the current page by clicking 'print'."
     }
   ],
   "/orders": [
@@ -32,6 +52,39 @@
       "targetId": "orderSearchBar",
       "targetAction": "focus",
       "description": "Focuses the order search input field."
+    },
+    {
+      "action": "view order",
+      "keys": [
+        "Alt",
+        "v"
+      ],
+      "display": "Alt + V",
+      "targetId": "orderList0",
+      "targetAction": "click",
+      "description": "Focuses the order search input field."
+    },
+    {
+      "action": "process order",
+      "keys": [
+        "Alt",
+        "p"
+      ],
+      "display": "Alt + P",
+      "targetId": "processOrder",
+      "targetAction": "click",
+      "description": "Processes the order by clicking 'processOrder'. (Display text may be misleading)"
+    },
+    {
+      "action": "cancel order",
+      "keys": [
+        "Alt",
+        "d"
+      ],
+      "display": "Alt + D",
+      "targetId": "cancelOrder",
+      "targetAction": "click",
+      "description": "Cancels the order by clicking 'cancelOrder'. (Display text may be misleading)"
     },
     {
       "action": "newOrder",

@@ -218,7 +218,7 @@ export default function OrderHistoryTab() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order) => (
+                {orders.map((order, index) => (
                   <tr key={order.id} className="border-t hover:bg-muted/50">
                     <td className="px-4 py-3 text-sm">#{order.id}</td>
                     <td className="px-4 py-3 text-sm">
@@ -228,13 +228,12 @@ export default function OrderHistoryTab() {
                     <td className="px-4 py-3 text-sm">{order.serverName}</td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          order.status === "completed"
-                            ? "bg-green-100 text-green-800"
-                            : order.status === "paid"
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${order.status === "completed"
+                          ? "bg-green-100 text-green-800"
+                          : order.status === "paid"
                             ? "bg-blue-100 text-blue-800"
                             : "bg-red-100 text-red-800"
-                        }`}
+                          }`}
                       >
                         {order.status.charAt(0).toUpperCase() +
                           order.status.slice(1)}
@@ -245,6 +244,7 @@ export default function OrderHistoryTab() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <Button
+                        id={`orderList${index}`}
                         variant="ghost"
                         size="sm"
                         onClick={() => {

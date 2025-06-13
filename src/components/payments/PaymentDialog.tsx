@@ -705,7 +705,7 @@ export default function PaymentDialog({
           <Button variant="outline" onClick={onClose} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handlePayment} disabled={loading}>
+          <Button id="processOrder" onClick={handlePayment} disabled={loading}>
             {loading ? "Processing..." : "Process Payment"}
           </Button>
         </DialogFooter>
