@@ -1,6 +1,7 @@
 {
   "global": [
     {
+      "action": "go to payments page",
       "keys": [
         "Alt",
         "w"
@@ -11,6 +12,7 @@
       "description": "Navigates to payments page by clicking 'goPayments'."
     },
     {
+      "action": "go to Orders page",
       "keys": [
         "Alt",
         "O"
@@ -21,6 +23,7 @@
       "description": "Navigates to orders page by clicking 'goOrders'."
     },
     {
+      "action": "Print the visiable page",
       "keys": [
         "Control",
         "p"
@@ -31,6 +34,7 @@
       "description": "Prints the current page by clicking 'print'."
     },
     {
+      "action": "Download the visiable recipt",
       "keys": [
         "Control",
         "j"
@@ -96,5 +100,8 @@
       "targetAction": "click",
       "description": "Opens the new order modal by clicking 'newOrderModalOpenBtn'. (Display text may be misleading)"
     }
-  ]
+  ],
+  "/payments": [],
+  "/kitchen": [],
+  "/tables": []
 }

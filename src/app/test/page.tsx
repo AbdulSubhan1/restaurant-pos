@@ -252,7 +252,7 @@ const ShortcutManagerScreen: React.FC = () => {
             const result = await response.json();
             console.log("Save successful:", result.message);
             // Force a reload to pick up changes in useKeyboardShortcuts hook in page.tsx
-            // window.location.reload();
+            window.location.reload();
         } catch (error: any) {
             console.error("Error saving shortcuts:", error.message);
             // setError(error);
@@ -281,11 +281,12 @@ const ShortcutManagerScreen: React.FC = () => {
 
             {shortcutsConfig && Object.entries(shortcutsConfig).map(([category, shortcuts]) => (
                 <div key={category} className="mb-8 last:mb-0">
-                    <h3 className="text-2xl font-semibold text-gray-700 mb-4 border-b pb-2 border-gray-300 capitalize">
-                        {category.replace('/', '').replace('entry', ' Entry').replace('payment', ' Payment') || 'Global'} Shortcuts
+                    <h3 className="text-2xl font-semibold capitalize text-gray-700 mb-4 border-b pb-2 border-gray-300 capitalize">
+                        {category.replace('/', '') } Shortcuts
                     </h3>
                     <div className="overflow-x-auto">
-                        <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
+                        {shortcuts.length > 0 ? (
+                             <table className="min-w-full bg-white border border-gray-200 rounded-lg shadow-sm">
                             <thead>
                                 <tr className="bg-gray-100 border-b">
                                     <th className="px-4 py-2 text-left text-sm font-medium text-gray-600">Action/Target</th>
@@ -321,6 +322,10 @@ const ShortcutManagerScreen: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
+                        ) : (
+                            <p className="text-gray-700 text-center">No shortcuts found for this category.</p>
+                        )
+                        }
                     </div>
                 </div>
             ))}
