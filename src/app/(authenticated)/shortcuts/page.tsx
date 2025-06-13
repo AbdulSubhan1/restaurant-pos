@@ -569,37 +569,7 @@ const ShortcutManagerScreen: React.FC = () => {
                                 )}
                             </div>
                         </div>
-
-                        {/* Action/Target Type Toggle (Optional, based on how you want to handle these fields) */}
-                        <div className="flex items-center gap-4 mt-2">
-                            <label className="text-sm font-medium text-gray-700">Type:</label>
-                            <div className="flex gap-2">
-                                <label className="inline-flex items-center">
-                                    <input
-                                        type="radio"
-                                        className="form-radio text-blue-600"
-                                        name="shortcutType"
-                                        value="action"
-                                        checked={!!modalShortcutDetails.action}
-                                        onChange={() => setModalShortcutDetails(prev => ({ ...prev, action: prev.action || '', targetId: '', targetAction: '' }))}
-                                    />
-                                    <span className="ml-2 text-gray-700">Action</span>
-                                </label>
-                                <label className="inline-flex items-center">
-                                    <input
-                                        type="radio"
-                                        className="form-radio text-blue-600"
-                                        name="shortcutType"
-                                        value="target"
-                                        checked={!!modalShortcutDetails.targetId || !!modalShortcutDetails.targetAction}
-                                        onChange={() => setModalShortcutDetails(prev => ({ ...prev, targetId: prev.targetId || '', targetAction: prev.targetAction || '', action: '' }))}
-                                    />
-                                    <span className="ml-2 text-gray-700">Target Element</span>
-                                </label>
-                            </div>
-                        </div>
-
-
+                        
                         {/* Conditional Inputs based on type */}
                         {modalShortcutDetails.action !== undefined && (
                             <div>
