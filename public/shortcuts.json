@@ -4,9 +4,9 @@
       "action": "go to payments page",
       "keys": [
         "Alt",
-        "w"
+        "p"
       ],
-      "display": "Alt + W",
+      "display": "Alt + P",
       "targetId": "goPayments",
       "targetAction": "click",
       "description": "Navigates to payments page by clicking 'goPayments'."
@@ -37,9 +37,9 @@
       "action": "Download the visiable recipt",
       "keys": [
         "Control",
-        "j"
+        "d"
       ],
-      "display": "Ctrl + J",
+      "display": "Ctrl + D",
       "targetId": "downloadRecipt",
       "targetAction": "click",
       "description": "donwload the current page by clicking 'print'."
@@ -93,15 +93,39 @@
     {
       "action": "newOrder",
       "keys": [
-        "F2"
+        "Alt",
+        "n"
       ],
-      "display": "Ctrl + N",
+      "display": "Alt + N",
       "targetId": "newOrderModalOpenBtn",
       "targetAction": "click",
       "description": "Opens the new order modal by clicking 'newOrderModalOpenBtn'. (Display text may be misleading)"
     }
   ],
-  "/payments": [],
+  "/payments": [
+    {
+      "description": "show the First receipt of the list ",
+      "action": "View payment receipt",
+      "targetId": "paymentList0",
+      "targetAction": "click",
+      "keys": [
+        "Alt",
+        "v"
+      ],
+      "display": "Alt + V"
+    },
+    {
+      "description": "Focuses the order search input field.",
+      "action": "search",
+      "targetId": "search",
+      "targetAction": "focus",
+      "keys": [
+        "Control",
+        "f"
+      ],
+      "display": "Ctrl + F"
+    }
+  ],
   "/kitchen": [],
   "/tables": []
 }

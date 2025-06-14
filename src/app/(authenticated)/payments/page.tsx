@@ -297,7 +297,7 @@ export default function PaymentsPage() {
                 </tr>
               </thead>
               <tbody>
-                {payments.map((payment) => (
+                {payments.map((payment, index) => (
                   <tr key={payment.id} className="border-t hover:bg-muted/50">
                     <td className="px-4 py-3 text-sm">{payment.reference}</td>
                     <td className="px-4 py-3 text-sm">
@@ -309,15 +309,14 @@ export default function PaymentsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          payment.status === "completed"
+                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${payment.status === "completed"
                             ? "bg-green-100 text-green-800"
                             : payment.status === "refunded"
-                            ? "bg-orange-100 text-orange-800"
-                            : payment.status === "failed"
-                            ? "bg-red-100 text-red-800"
-                            : "bg-blue-100 text-blue-800"
-                        }`}
+                              ? "bg-orange-100 text-orange-800"
+                              : payment.status === "failed"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-blue-100 text-blue-800"
+                          }`}
                       >
                         {payment.status.charAt(0).toUpperCase() +
                           payment.status.slice(1)}
@@ -331,6 +330,7 @@ export default function PaymentsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm">
                       <Button
+                        id={`paymentList${index}`}
                         variant="ghost"
                         size="sm"
                         onClick={() => viewReceipt(payment)}
