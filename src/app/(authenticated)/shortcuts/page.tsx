@@ -1,10 +1,9 @@
 'use client'; // Required for Next.js Client Components
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-// Removed: import { useRouter } from 'next/navigation'; // Import useRouter for navigation
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'; // Assuming these are relative paths to your shadcn/ui components
 import { AlertDialogHeader } from '@/components/ui/alert-dialog'; // Assuming this is relative path
-import { ArrowLeft, CopyPlus, Edit, HardDriveUpload, Trash } from 'lucide-react'; // Adjusted icons to only what's used
+import { ArrowLeft, CopyPlus, Edit, HardDriveUpload, Trash, Plus } from 'lucide-react'; // Added Plus icon
 
 
 // --- Type Definitions ---
@@ -26,7 +25,6 @@ interface ShortcutsConfig {
 
 // ShortcutManagerScreen Component
 const ShortcutManagerScreen: React.FC = () => {
-    // Replaced: const router = useRouter(); // Initialize Next.js router
     const [shortcutsConfig, setShortcutsConfig] = useState<ShortcutsConfig | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<Error | null>(null);
@@ -54,6 +52,10 @@ const ShortcutManagerScreen: React.FC = () => {
     // State for Delete Confirmation Modal
     const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
     const [deleteTarget, setDeleteTarget] = useState<{ category: string; index?: number } | null>(null); // For category or specific shortcut
+
+    // State for Add Category Modal
+    const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
 
 
     // --- Data Fetching for this component's shortcuts configuration ---
@@ -338,6 +340,29 @@ const ShortcutManagerScreen: React.FC = () => {
         setIsShortcutModalOpen(true);
     };
 
+    // Handler for adding a new category
+    const handleAddCategory = () => {
+        if (!newCategoryName.trim()) {
+            console.warn('Category name cannot be empty.');
+            return;
+        }
+        const formattedCategoryName = newCategoryName.trim().toLowerCase().replace(/\s+/g, ''); // Basic formatting
+
+        setShortcutsConfig(prevConfig => {
+            if (!prevConfig) return null;
+            if (prevConfig[formattedCategoryName]) {
+                console.warn(`Category "${formattedCategoryName}" already exists.`);
+                return prevConfig; // Don't add if it already exists
+            }
+            return {
+                ...prevConfig,
+                [formattedCategoryName]: [] // Add new category with an empty array of shortcuts
+            };
+        });
+        setNewCategoryName('');
+        setShowAddCategoryModal(false);
+    };
+
     // Handle delete confirmation initiation
     const handleDeleteConfirmation = (category: string, index?: number) => {
         setDeleteTarget({ category, index });
@@ -391,7 +416,7 @@ const ShortcutManagerScreen: React.FC = () => {
                 Click on the current shortcut display to change it, then press the desired key combination.
             </p>
 
-            {/* Action Buttons: Go Back and Save Changes */}
+            {/* Action Buttons: Go Back, Add Category, and Save Changes */}
             <div className="flex justify-between my-8">
                 <button
                     onClick={handleGoBack}
@@ -400,14 +425,23 @@ const ShortcutManagerScreen: React.FC = () => {
                     <ArrowLeft className="h-4 w-4 mr-2" />
                     Go Back
                 </button>
-                <button
-                    onClick={handleSaveChanges}
-                    className="flex items-center bg-green-500 hover:bg-green-600 cursor-pointer text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
-                    disabled={!!listeningFor} // Disable if listening for shortcut
-                >
-                    <HardDriveUpload className="h-5 w-5 mr-2" />
-                    Save Changes
-                </button>
+                <div className="flex gap-4">
+                    <button
+                        onClick={() => setShowAddCategoryModal(true)}
+                        className="flex items-center bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                    >
+                        <Plus className="h-5 w-5 mr-2" />
+                        Add New Category
+                    </button>
+                    <button
+                        onClick={handleSaveChanges}
+                        className="flex items-center bg-green-500 hover:bg-green-600 cursor-pointer text-white font-bold py-3 px-6 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105"
+                        disabled={!!listeningFor} // Disable if listening for shortcut
+                    >
+                        <HardDriveUpload className="h-5 w-5 mr-2" />
+                        Save Changes
+                    </button>
+                </div>
             </div>
 
             {/* Shortcut Categories Section */}
@@ -421,15 +455,17 @@ const ShortcutManagerScreen: React.FC = () => {
                             {/* Add New Shortcut Button */}
                             <button
                                 onClick={() => openAddShortcutModal(category)}
-                                className="bg-blue-400 hover:bg-blue-500 px-3 py-2  text-white rounded-md transition duration-150 flex items-center gap-1"
+                                className="bg-blue-400 hover:bg-blue-500 px-3 py-2 text-white rounded-md transition duration-150 flex items-center gap-1"
+                                title="Add a new shortcut to this category"
                             >
-                                <CopyPlus className="h-4 w-4" /> 
+                                <CopyPlus className="h-4 w-4" />
                             </button>
                             {/* Delete Category Button (hidden for 'global' category) */}
                             {category !== 'global' && (
                                 <button
                                     onClick={() => handleDeleteConfirmation(category)}
-                                    className="bg-red-400 hover:bg-red-500  px-3 py-2 text-white rounded-md transition duration-150 flex items-center gap-1"
+                                    className="bg-red-400 hover:bg-red-500 px-3 py-2 text-white rounded-md transition duration-150 flex items-center gap-1"
+                                    title="Delete this category"
                                 >
                                     <Trash className="h-4 w-4" />
                                 </button>
@@ -569,7 +605,7 @@ const ShortcutManagerScreen: React.FC = () => {
                                 )}
                             </div>
                         </div>
-                        
+
                         {/* Conditional Inputs based on type */}
                         {modalShortcutDetails.action !== undefined && (
                             <div>
@@ -633,6 +669,45 @@ const ShortcutManagerScreen: React.FC = () => {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Add New Category Modal */}
+            <Dialog open={showAddCategoryModal} onOpenChange={setShowAddCategoryModal}>
+                <DialogContent className="sm:max-w-[425px] p-6 bg-white rounded-lg shadow-lg">
+                    <AlertDialogHeader className="mb-4">
+                        <DialogTitle className="text-xl font-semibold text-gray-800">Add New Category</DialogTitle>
+                    </AlertDialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div>
+                            <label htmlFor="newCategoryName" className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
+                            <input
+                                id="newCategoryName"
+                                type="text"
+                                className="mt-1 w-full p-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500"
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                placeholder="e.g., /Sales, /Inventory, /Reports"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                        <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-500 focus-visible:ring-offset-2 transition-colors duration-200"
+                            onClick={() => setShowAddCategoryModal(false)}
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            type="button"
+                            className="inline-flex justify-center rounded-md border border-transparent bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 transition-colors duration-200"
+                            onClick={handleAddCategory}
+                        >
+                            Add Category
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
 
             {/* Delete Confirmation Modal */}
             <Dialog open={showDeleteConfirmation} onOpenChange={setShowDeleteConfirmation}>
