@@ -127,5 +127,72 @@
     }
   ],
   "/kitchen": [],
-  "/tables": []
+  "/tables": [
+    {
+      "description": "Opens the new order modal by clicking 'addNew'. (Display text may be misleading)",
+      "action": "Add New Table",
+      "targetId": "addNew",
+      "targetAction": "click",
+      "keys": [
+        "Alt",
+        "n"
+      ],
+      "display": "Alt + N"
+    },
+    {
+      "description": "Change Status of 1st table of the list",
+      "action": "1st Table",
+      "targetId": "tableList0",
+      "targetAction": "click",
+      "keys": [
+        "Alt",
+        "1"
+      ],
+      "display": "Alt + 1"
+    },
+    {
+      "description": "Change Status of 2nd table of the list",
+      "action": "2nd Table",
+      "targetId": "tableList1",
+      "targetAction": "click",
+      "keys": [
+        "Alt",
+        "2"
+      ],
+      "display": "Alt + 2"
+    },
+    {
+      "description": "Change Status of 3rd table of the list",
+      "action": "3rd Table",
+      "targetId": "tableList2",
+      "targetAction": "click",
+      "keys": [
+        "Alt",
+        "3"
+      ],
+      "display": "Alt + 3"
+    },
+    {
+      "description": "Change Status of 4th table of the list",
+      "action": "4th Table",
+      "targetId": "tableList3",
+      "targetAction": "click",
+      "keys": [
+        "Alt",
+        "4"
+      ],
+      "display": "Alt + 4"
+    },
+    {
+      "description": "Change Status of 5th table of the list",
+      "action": "5th Table",
+      "targetId": "tableList4",
+      "targetAction": "click",
+      "keys": [
+        "Alt",
+        "5"
+      ],
+      "display": "Alt + 5"
+    }
+  ]
 }

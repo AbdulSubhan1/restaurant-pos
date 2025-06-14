@@ -131,19 +131,19 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
     router.push(`?${params.toString()}`);
   };
 
-  const getStatusBadge = (table: UITableType, status: string) => {
+  const getStatusBadge = (table: UITableType, status: string, index: number) => {
     console.log(table.id, status);
     switch (table.status.toLowerCase()) {
       case "available":
-        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-green-500 cursor-pointer">Available</Badge>;
+        return <Badge id={`tableList${index}`} onClick={() => toggleTableStatus(table.id, status)} className="bg-green-500 cursor-pointer">Available</Badge>;
       case "occupied":
-        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-red-500 cursor-pointer">Occupied</Badge>;
+        return <Badge id={`tableList${index}`} onClick={() => toggleTableStatus(table.id, status)} className="bg-red-500 cursor-pointer">Occupied</Badge>;
       case "reserved":
-        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-yellow-500 cursor-pointer">Reserved</Badge>;
+        return <Badge id={`tableList${index}`} onClick={() => toggleTableStatus(table.id, status)} className="bg-yellow-500 cursor-pointer">Reserved</Badge>;
       case "maintenance":
-        return <Badge onClick={() => toggleTableStatus(table.id, status)} className="bg-gray-500 cursor-pointer">Maintenance</Badge>;
+        return <Badge id={`tableList${index}`} onClick={() => toggleTableStatus(table.id, status)} className="bg-gray-500 cursor-pointer">Maintenance</Badge>;
       default:
-        return <Badge>{status}</Badge>;
+        return <Badge id={`tableList${index}`} >{status}</Badge>;
     }
   };
 
@@ -208,12 +208,12 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tables.map((table) => (
-                <TableRow key={table.id}>
+              {tables.map((table, index) => (
+                <TableRow key={table.id} >
                   <TableCell className="font-medium">{table.name}</TableCell>
                   <TableCell>{table.capacity}</TableCell>
                   <TableCell>
-                    {getStatusBadge(table, table.status)}
+                    {getStatusBadge(table, table.status, index)}
                   </TableCell>
                   <TableCell>{table.notes || "-"}</TableCell>
                   <TableCell className="text-right">
