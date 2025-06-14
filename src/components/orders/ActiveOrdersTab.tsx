@@ -232,7 +232,7 @@ export default function ActiveOrdersTab() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Active Orders</h2>
-        <Button onClick={() => setIsCreatingOrder(true)} id='newOrderModalOpenBtn'>
+        <Button onClick={() => setIsCreatingOrder(true)} id='addNew'>
           <Plus className="mr-2 h-4 w-4" /> New Order
         </Button>
       </div>

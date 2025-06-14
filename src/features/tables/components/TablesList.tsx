@@ -155,7 +155,7 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
           <CardDescription>Manage your restaurant tables</CardDescription>
         </div>
         <div className="flex space-x-2">
-          <Button size="sm" onClick={() => router.push("/tables/new")}>
+          <Button size="sm" id="addNew" onClick={() => router.push("/tables/new")}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add Table
           </Button>

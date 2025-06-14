@@ -303,6 +303,7 @@ export default function MenuItemsTab({
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle>Menu Items</CardTitle>
           <Button
+            id='addNew'
             onClick={() => setIsAddingItem(true)}
             className="ml-auto"
             disabled={isAddingItem}

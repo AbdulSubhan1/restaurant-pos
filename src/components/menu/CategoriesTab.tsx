@@ -166,6 +166,7 @@ export default function CategoriesTab({
         <CardHeader className="flex flex-row items-center justify-between pb-2">
           <CardTitle>Categories</CardTitle>
           <Button
+            id='addNew'
             onClick={() => setIsAddingCategory(true)}
             className="ml-auto"
             disabled={isAddingCategory}
