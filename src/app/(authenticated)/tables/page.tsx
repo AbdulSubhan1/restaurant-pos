@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
 
 export default function TablesPage() {
-  const [viewMode, setViewMode] = useState<"list" | "grid">("grid");
+  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
 
   return (
     <div className="p-6">
@@ -35,7 +35,7 @@ export default function TablesPage() {
         </div>
       </div>
 
-      {viewMode === "grid" ? <TableLayout /> : <TablesList />}
+      {viewMode === "grid" ? <TableLayout /> : <TablesList initialTables={[]} pagination={{ total: 0, page: 1, limit: 10, totalPages: 0 }} />}
     </div>
   );
 }

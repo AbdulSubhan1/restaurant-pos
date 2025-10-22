@@ -12,12 +12,17 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Settings } from "lucide-react";
+import { RefreshCw, Settings, Users, Split } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MergeTableDialog } from "./MergeTableDialog";
+import { SplitTableDialog } from "./SplitTableDialog";
 
 export function TableLayout() {
   const [tables, setTables] = useState<Table[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
+  const [isSplitDialogOpen, setIsSplitDialogOpen] = useState(false);
+  const [selectedMergedTable, setSelectedMergedTable] = useState<Table | null>(null);
   const router = useRouter();
 
   const fetchTables = async () => {
@@ -113,15 +118,26 @@ export function TableLayout() {
             Visual representation of restaurant tables
           </CardDescription>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchTables}
-          disabled={isLoading}
-        >
-          <RefreshCw className="h-4 w-4 mr-2" />
-          Refresh
-        </Button>
+        <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsMergeDialogOpen(true)}
+            disabled={tables.length < 2}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Merge Tables
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchTables}
+            disabled={isLoading}
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -153,24 +169,73 @@ export function TableLayout() {
                 >
                   <div className="text-lg font-semibold">{table.name}</div>
                   <div className="text-sm mb-2">Seats: {table.capacity}</div>
-                  {getBadgeForStatus(table.status)}
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="absolute top-0 right-0 p-1 m-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      router.push(`/tables/${table.id}`);
-                    }}
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
+                  <div className="flex items-center gap-2 mb-2">
+                    {getBadgeForStatus(table.status)}
+                    {table.isMerged && (
+                      <Badge className="bg-purple-100 text-purple-800 text-xs">
+                        Merged
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="flex gap-1">
+                    {table.isMerged && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="p-1 h-6 w-6 text-green-600 hover:text-green-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedMergedTable(table);
+                          setIsSplitDialogOpen(true);
+                        }}
+                      >
+                        <Split className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="p-1 h-6 w-6"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/tables/${table.id}`);
+                      }}
+                    >
+                      <Settings className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         )}
       </CardContent>
+      
+      {/* Merge Table Dialog */}
+      <MergeTableDialog
+        isOpen={isMergeDialogOpen}
+        onClose={() => setIsMergeDialogOpen(false)}
+        onSuccess={() => {
+          fetchTables();
+          setIsMergeDialogOpen(false);
+        }}
+        availableTables={tables}
+      />
+      
+      {/* Split Table Dialog */}
+      <SplitTableDialog
+        isOpen={isSplitDialogOpen}
+        onClose={() => {
+          setIsSplitDialogOpen(false);
+          setSelectedMergedTable(null);
+        }}
+        onSuccess={() => {
+          fetchTables();
+          setIsSplitDialogOpen(false);
+          setSelectedMergedTable(null);
+        }}
+        mergedTable={selectedMergedTable}
+      />
     </Card>
   );
 }

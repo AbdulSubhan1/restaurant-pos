@@ -21,11 +21,51 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, RefreshCw } from "lucide-react";
+import { PlusIcon, RefreshCw, Users, Split } from "lucide-react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import { MergeTableDialog } from "./MergeTableDialog";
+import { SplitTableDialog } from "./SplitTableDialog";
 
-export function TablesList() {
-  const [tables, setTables] = useState<Table[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+// Define a UI Table type
+// (matches the UI needs, not DB schema directly)
+type UITableType = {
+  id: number;
+  name: string;
+  capacity: number;
+  status: string;
+  xPosition: number;
+  yPosition: number;
+  active: boolean;
+  notes: string | null;
+  isMerged: boolean;
+  mergedFromTables: number[] | null;
+  originalTableData: any[] | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+interface TablesListProps {
+  initialTables: UITableType[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}
+
+export function TablesList({ initialTables, pagination }: TablesListProps) {
+  const [tables, setTables] = useState<UITableType[]>(initialTables);
+  const [isLoading, setIsLoading] = useState(false); // SSR: no loading on mount
+  const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
+  const [isSplitDialogOpen, setIsSplitDialogOpen] = useState(false);
+  const [selectedMergedTable, setSelectedMergedTable] = useState<UITableType | null>(null);
   const router = useRouter();
 
   const fetchTables = async () => {
@@ -105,16 +145,16 @@ export function TablesList() {
           <CardDescription>Manage your restaurant tables</CardDescription>
         </div>
         <div className="flex space-x-2">
-          <Button
+          <Button 
+            size="sm" 
             variant="outline"
-            size="sm"
-            onClick={fetchTables}
-            disabled={isLoading}
+            onClick={() => setIsMergeDialogOpen(true)}
+            disabled={tables?.length < 2}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
+            <Users className="h-4 w-4 mr-2" />
+            Merge Tables
           </Button>
-          <Button size="sm" onClick={() => router.push("/tables/new")}>
+          <Button size="sm" id="addNew" onClick={() => router.push("/tables/new")}>
             <PlusIcon className="h-4 w-4 mr-2" />
             Add Table
           </Button>
@@ -125,7 +165,7 @@ export function TablesList() {
           <div className="flex justify-center py-8">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
-        ) : tables.length === 0 ? (
+        ) : tables?.length === 0 ? (
           <div className="text-center py-8">
             <p className="text-muted-foreground">No tables found.</p>
             <Button
@@ -149,20 +189,36 @@ export function TablesList() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tables.map((table) => (
+              {tables?.map((table) => (
                 <TableRow key={table.id}>
                   <TableCell className="font-medium">{table.name}</TableCell>
                   <TableCell>{table.capacity}</TableCell>
                   <TableCell>{getStatusBadge(table.id, table.status)}</TableCell>
                   <TableCell>{table.notes || "-"}</TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => router.push(`/tables/${table.id}`)}
-                    >
-                      Edit
-                    </Button>
+                    <div className="flex items-center gap-2 justify-end">
+                      {table.isMerged && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedMergedTable(table);
+                            setIsSplitDialogOpen(true);
+                          }}
+                          className="text-green-600 hover:text-green-700"
+                        >
+                          <Split className="h-4 w-4 mr-1" />
+                          Split
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => router.push(`/tables/${table.id}`)}
+                      >
+                        Edit
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -170,6 +226,32 @@ export function TablesList() {
           </UITable>
         )}
       </CardContent>
+      
+      {/* Merge Table Dialog */}
+      <MergeTableDialog
+        isOpen={isMergeDialogOpen}
+        onClose={() => setIsMergeDialogOpen(false)}
+        onSuccess={() => {
+          fetchTables();
+          setIsMergeDialogOpen(false);
+        }}
+        availableTables={tables}
+      />
+      
+      {/* Split Table Dialog */}
+      <SplitTableDialog
+        isOpen={isSplitDialogOpen}
+        onClose={() => {
+          setIsSplitDialogOpen(false);
+          setSelectedMergedTable(null);
+        }}
+        onSuccess={() => {
+          fetchTables();
+          setIsSplitDialogOpen(false);
+          setSelectedMergedTable(null);
+        }}
+        mergedTable={selectedMergedTable}
+      />
     </Card>
   );
 }
