@@ -144,7 +144,7 @@ export function Sidebar() {
 
   return (
     <div className="w-64 bg-white shadow-sm overflow-y-auto h-full flex-shrink-0 hidden sm:block">
-      <div className="p-4">
+      <div className="p-4 h-[calc(100vh-64px)]">
         {navigationCategories.map((category) => {
           const filteredItems = filterItemsByRole(category.items);
 

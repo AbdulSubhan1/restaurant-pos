@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TablesList } from "@/features/tables/components/TablesList";
 import { TableLayout } from "@/features/tables/components/TableLayout";
+import { ReservationExpiryManager } from "@/features/tables/components/ReservationExpiryManager";
 import { Button } from "@/components/ui/button";
 import { LayoutGrid, List } from "lucide-react";
 
@@ -11,6 +12,9 @@ export default function TablesPage() {
 
   return (
     <div className="p-6">
+      {/* Auto-expiry manager runs in background */}
+      <ReservationExpiryManager />
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Table Management</h1>
         <div className="flex space-x-2">

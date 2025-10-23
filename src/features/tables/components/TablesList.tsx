@@ -21,7 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { PlusIcon, RefreshCw, Users, Split } from "lucide-react";
+import { PlusIcon, RefreshCw, Users, Split, Calendar, RotateCcw } from "lucide-react";
 import {
   Select,
   SelectTrigger,
@@ -31,6 +31,10 @@ import {
 } from "@/components/ui/select";
 import { MergeTableDialog } from "./MergeTableDialog";
 import { SplitTableDialog } from "./SplitTableDialog";
+import { ReservationFormDialog } from "./ReservationFormDialog";
+import { ReservationCancelDialog } from "./ReservationCancelDialog";
+import { ReservationTimeDisplay } from "./ReservationTimeDisplay";
+import { TableStatusSelector } from "./TableStatusSelector";
 
 // Define a UI Table type
 // (matches the UI needs, not DB schema directly)
@@ -65,7 +69,15 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
   const [isLoading, setIsLoading] = useState(false); // SSR: no loading on mount
   const [isMergeDialogOpen, setIsMergeDialogOpen] = useState(false);
   const [isSplitDialogOpen, setIsSplitDialogOpen] = useState(false);
+  const [isReservationDialogOpen, setIsReservationDialogOpen] = useState(false);
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedMergedTable, setSelectedMergedTable] = useState<UITableType | null>(null);
+  const [selectedTableForCancel, setSelectedTableForCancel] = useState<{
+    tableId: number;
+    tableName: string;
+    reservation: any;
+    newStatus?: string;
+  } | null>(null);
   const router = useRouter();
 
   const fetchTables = async () => {
@@ -86,14 +98,67 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
     }
   };
 
+  const syncTableStatuses = async () => {
+    try {
+      const response = await fetch("/api/tables/sync-status", {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(data.message);
+        fetchTables(); // Refresh tables after sync
+      } else {
+        toast.error(data.message || "Failed to sync table statuses");
+      }
+    } catch (error) {
+      console.error("Error syncing table statuses:", error);
+      toast.error("Failed to sync table statuses");
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
     fetchTables();
   }, []);
 
-  // Function to update table status (simplified for demo)
-  const toggleTableStatus = async (tableId: number, currentStatus: string) => {
-    const newStatus = currentStatus === "available" ? "occupied" : "available";
+  // Function to update table status with reservation handling
+  const toggleTableStatus = async (tableId: number, newStatus: string) => {
+    // If changing from reserved to another status, show confirmation dialog
+    const currentTable = tables.find(t => t.id === tableId);
+    if (currentTable?.status === "reserved" && newStatus !== "reserved") {
+      try {
+        // Fetch reservation details
+        const reservationsResponse = await fetch(`/api/reservations?tableId=${tableId}&status=confirmed`);
+        const reservationsData = await reservationsResponse.json();
+        
+        if (reservationsData.success && reservationsData.reservations.length > 0) {
+          const reservation = reservationsData.reservations[0];
+          
+          setSelectedTableForCancel({
+            tableId,
+            tableName: currentTable.name || `Table ${tableId}`,
+            newStatus,
+            reservation: {
+              id: reservation.id,
+              customerName: reservation.customerName,
+              customerPhone: reservation.customerPhone,
+              reservationDate: reservation.reservationDate,
+              reservationTime: reservation.reservationTime,
+              partySize: reservation.partySize,
+              duration: reservation.duration,
+            }
+          });
+          setIsCancelDialogOpen(true);
+          return; // Don't proceed with status change
+        }
+      } catch (error) {
+        console.error("Error fetching reservation details:", error);
+        toast.error("Failed to fetch reservation details");
+        return;
+      }
+    }
 
     try {
       const response = await fetch(`/api/tables/${tableId}`, {
@@ -122,19 +187,52 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
     }
   };
 
-  const getStatusBadge = (id: number, status: string) => {
-    switch (status.toLowerCase()) {
-      case "available":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-green-500">Available</Badge>;
-      case "occupied":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-red-500">Occupied</Badge>;
-      case "reserved":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-yellow-500">Reserved</Badge>;
-      case "maintenance":
-        return <Badge onClick={() => toggleTableStatus(id, status)} className="cursor-pointer bg-gray-500">Maintenance</Badge>;
-      default:
-        return <Badge>{status}</Badge>;
+  const handleReservationCancel = async () => {
+    if (!selectedTableForCancel) return;
+
+    try {
+      const cancelResponse = await fetch(`/api/reservations/${selectedTableForCancel.reservation.id}`, {
+        method: "DELETE",
+      });
+      
+      if (!cancelResponse.ok) {
+        const cancelData = await cancelResponse.json();
+        throw new Error(cancelData.message || "Failed to cancel reservation");
+      }
+      
+      // Update table status to the originally selected status
+      const tableResponse = await fetch(`/api/tables/${selectedTableForCancel.tableId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: selectedTableForCancel.newStatus || "available",
+        }),
+      });
+
+      if (!tableResponse.ok) {
+        const tableData = await tableResponse.json();
+        throw new Error(tableData.message || "Failed to update table status");
+      }
+      
+      toast.success("Reservation cancelled and table made available");
+      fetchTables(); // Refresh tables
+    } catch (error) {
+      console.error("Error cancelling reservation:", error);
+      toast.error("Failed to cancel reservation");
+      throw error; // Re-throw to let dialog handle it
     }
+  };
+
+  const getStatusBadge = (id: number, status: string) => {
+    return (
+      <TableStatusSelector
+        tableId={id}
+        currentStatus={status}
+        onStatusChange={toggleTableStatus}
+      />
+    );
   };
 
   return (
@@ -145,6 +243,24 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
           <CardDescription>Manage your restaurant tables</CardDescription>
         </div>
         <div className="flex space-x-2">
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={syncTableStatuses}
+            disabled={isLoading}
+          >
+            <RotateCcw className="h-4 w-4 mr-2" />
+            Sync Status
+          </Button>
+          <Button 
+            size="sm" 
+            variant="outline"
+            onClick={() => setIsReservationDialogOpen(true)}
+            disabled={tables?.length === 0}
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Reserve Table
+          </Button>
           <Button 
             size="sm" 
             variant="outline"
@@ -251,6 +367,29 @@ export function TablesList({ initialTables, pagination }: TablesListProps) {
           setSelectedMergedTable(null);
         }}
         mergedTable={selectedMergedTable}
+      />
+      
+      {/* Reservation Form Dialog */}
+      <ReservationFormDialog
+        isOpen={isReservationDialogOpen}
+        onClose={() => setIsReservationDialogOpen(false)}
+        onSuccess={() => {
+          fetchTables();
+          setIsReservationDialogOpen(false);
+        }}
+        availableTables={tables}
+      />
+      
+      {/* Reservation Cancel Dialog */}
+      <ReservationCancelDialog
+        isOpen={isCancelDialogOpen}
+        onClose={() => {
+          setIsCancelDialogOpen(false);
+          setSelectedTableForCancel(null);
+        }}
+        onConfirm={handleReservationCancel}
+        tableName={selectedTableForCancel?.tableName || ""}
+        reservation={selectedTableForCancel?.reservation || null}
       />
     </Card>
   );
