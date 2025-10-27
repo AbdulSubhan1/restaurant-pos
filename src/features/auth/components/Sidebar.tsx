@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Settings,
   QrCode,
+  Layout,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,12 @@ export function Sidebar() {
           label: "Tables",
           href: "/tables",
           icon: <Utensils className="h-5 w-5" />,
+        },
+        {
+          label: "Layout Designer",
+          href: "/tables/designer",
+          icon: <Layout className="h-5 w-5" />,
+          roles: ["admin", "manager"],
         },
         {
           label: "Menu Management",

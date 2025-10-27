@@ -5,7 +5,8 @@ import { TablesList } from "@/features/tables/components/TablesList";
 import { TableLayout } from "@/features/tables/components/TableLayout";
 import { ReservationExpiryManager } from "@/features/tables/components/ReservationExpiryManager";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, List } from "lucide-react";
+import { LayoutGrid, List, Layout } from "lucide-react";
+import Link from "next/link";
 
 export default function TablesPage() {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
@@ -18,6 +19,12 @@ export default function TablesPage() {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Table Management</h1>
         <div className="flex space-x-2">
+          <Link href="/tables/designer">
+            <Button variant="outline" className="flex items-center gap-1">
+              <Layout className="h-4 w-4" />
+              <span className="hidden sm:inline">Layout Designer</span>
+            </Button>
+          </Link>
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="sm"
